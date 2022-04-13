@@ -70,9 +70,163 @@
 	
 	$lastcat = -1;
 
-	$sql = "SELECT message FROM status where id=1";
+	$sql = "SELECT message_id FROM status where id=1";
 	$result = $db->query($sql);
-	$status = $result->fetchArray()[0] ?? '';
+	$status = $result->fetchArray()[0] ?? 0;
+
+	switch($status) {
+		case 0:
+			$message = "Podobo Stopped";
+			$state = 0;
+			$progress = "";
+			break;
+		case 1:
+			$message = "Idle";
+			$state = 1;
+			$progress = "";
+			break;
+		case 2:
+			$message = "Initializing";
+			$state = 3;
+			$progress = "";
+			break;
+		case 3:
+			$message = "Importing new Images";
+			$state = 3;
+			$sql = "SELECT import_progress FROM status where id=1";
+			$result = $db->query($sql);
+			$progress = " - " . $result->fetchArray()[0] ?? '';
+			break;
+		case 4:
+			$message = "IQDB in Progress";
+			$state = 2;
+			$sql = "SELECT iqdb_progress FROM status where id=1";
+			$result = $db->query($sql);
+			$iqdb = $result->fetchArray()[0] ?? '';
+			$progress = " - " . $iqdb . " / 300";
+			break;
+		case 5:
+			$message = "Processing Dupes";
+			$state = 3;
+			$sql = "SELECT dupes_progress FROM status where id=1";
+			$result = $db->query($sql);
+			$progress = " - " . $result->fetchArray()[0] ?? '';
+			break;
+		case 6:
+			$message = "Auto Tagging";
+			$state = 2;
+			$sql = "SELECT auto_booru_progress FROM status where id=1";
+			$result = $db->query($sql);
+			$auto_booru = $result->fetchArray()[0] ?? '';
+			$progress = " - " . $auto_booru . " / 300";
+			break;
+		case 7:
+			$message = "Retro Parents Work";
+			$state = 3;
+			$sql = "SELECT closing_progress FROM status where id=1";
+			$result = $db->query($sql);
+			$progress = " - " . $result->fetchArray()[0] ?? '';
+			break;
+		case 8:
+			$message = "Retro Siblings Work";
+			$state = 3;
+			$sql = "SELECT closing_progress FROM status where id=1";
+			$result = $db->query($sql);
+			$progress = " - " . $result->fetchArray()[0] ?? '';
+			break;
+		case 9:
+			$message = "Adding to Trash";
+			$state = 3;
+			$sql = "SELECT closing_progress FROM status where id=1";
+			$result = $db->query($sql);
+			$progress = " - " . $result->fetchArray()[0] ?? '';
+			break;
+		case 10:
+			$message = "Removing Broken Tags";
+			$state = 3;
+			$sql = "SELECT closing_progress FROM status where id=1";
+			$result = $db->query($sql);
+			$progress = " - " . $result->fetchArray()[0] ?? '';
+			break;
+		case 11:
+			$message = "Removing Duplicate Sources";
+			$state = 3;
+			$sql = "SELECT closing_progress FROM status where id=1";
+			$result = $db->query($sql);
+			$progress = " - " . $result->fetchArray()[0] ?? '';
+			break;
+		case 12:
+			$message = "Calculating Missing P-hashes";
+			$state = 3;
+			$sql = "SELECT closing_progress FROM status where id=1";
+			$result = $db->query($sql);
+			$progress = " - " . $result->fetchArray()[0] ?? '';
+			break;
+		case 13:
+			$message = "Checking for Deleted Files";
+			$state = 3;
+			$sql = "SELECT closing_progress FROM status where id=1";
+			$result = $db->query($sql);
+			$progress = " - " . $result->fetchArray()[0] ?? '';
+			break;
+		case 14:
+			$message = "Recalculating Tag Counts";
+			$state = 3;
+			$sql = "SELECT closing_progress FROM status where id=1";
+			$result = $db->query($sql);
+			$progress = " - " . $result->fetchArray()[0] ?? '';
+			break;
+		case 15:
+			$message = "Removing Broken Siblings";
+			$state = 3;
+			$sql = "SELECT closing_progress FROM status where id=1";
+			$result = $db->query($sql);
+			$progress = " - " . $result->fetchArray()[0] ?? '';
+			break;
+		case 16:
+			$message = "Removing Broken Parents";
+			$state = 3;
+			$sql = "SELECT closing_progress FROM status where id=1";
+			$result = $db->query($sql);
+			$progress = " - " . $result->fetchArray()[0] ?? '';
+			break;
+		case 17:
+			$message = "Emptying Trash";
+			$state = 3;
+			$sql = "SELECT closing_progress FROM status where id=1";
+			$result = $db->query($sql);
+			$progress = " - " . $result->fetchArray()[0] ?? '';
+			break;
+		case 18:
+			$message = "Backing Up Database";
+			$state = 3;
+			$sql = "SELECT closing_progress FROM status where id=1";
+			$result = $db->query($sql);
+			$progress = " - " . $result->fetchArray()[0] ?? '';
+			break;
+		case 19:
+			$message = "Rotating Images CW";
+			$state = 3;
+			$sql = "SELECT closing_progress FROM status where id=1";
+			$result = $db->query($sql);
+			$progress = " - " . $result->fetchArray()[0] ?? '';
+			break;
+		case 19:
+			$message = "Rotating Images CCW";
+			$state = 3;
+			$sql = "SELECT closing_progress FROM status where id=1";
+			$result = $db->query($sql);
+			$progress = " - " . $result->fetchArray()[0] ?? '';
+			break;
+			
+		default:
+			$message = "Closing Job";
+			$state = 3;
+			$sql = "SELECT closing_progress FROM status where id=1";
+			$result = $db->query($sql);
+			$progress = " - " . $result->fetchArray()[0] ?? '';
+			break;
+	}
 
 	$sql = "SELECT iqdb_progress FROM status where id=1";
 	$result = $db->query($sql);
@@ -153,7 +307,7 @@
 				<a class="w3-bar-item w3-button w3-hide-small w3-hover-blue-grey" href="Slideshow.php">Slideshow</a>
 				<a class="w3-bar-item w3-button w3-hide-small w3-hover-blue-grey" href="Tools.php">Tools</a>
 				<a class="w3-bar-item w3-theme-l1"> | </a>
-				<a class="w3-bar-item w3-button w3-hide-small w3-hover-blue-grey"><?php echo $status . " - " . $iqdbcount; ?></a>
+				<a class="w3-bar-item w3-button w3-hide-small w3-hover-blue-grey"><?php echo $message . $progress; ?></a>
 
             </div>
 			<div class="w3-bar w3-theme-l1 w3-left-align w3-small container_subheader">

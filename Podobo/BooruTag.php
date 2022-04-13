@@ -34,8 +34,31 @@
 	$r = rand(0, $idcount);
 	
 	$postp = $db->query("select * from booru_proc where processed = 0 order by random() limit 1")->fetchArray() ?? '';	
-	$postpcount = $db->query("select distinct count(*) from booru_proc where processed = 0")->fetchArray()[0] ?? '';		
+	$postpcount = $db->query("select distinct count(*) from booru_proc where processed = 0")->fetchArray()[0] ?? '';
 	
+	$query = "select * from tags where tag_name = '" . str_replace("_", " ", $postp[2]) . "' COLLATE NOCASE";
+	$tag_item = $db->query($query)->fetchArray() ?? '';
+	if($tag_item != ''){
+		$tag = str_replace(" ", "_", $tag_item[1]);
+	}
+	else{
+		$tag = "";
+	}
+	
+
+	//if tag is a alias get preferred
+	if($tag != ""){
+		$sql = $db->prepare("select preferred from siblings where alias = :alias");
+		$sql->bindValue(":alias", $tag_item[0], SQLITE3_INTEGER);
+		$preferred = $sql->execute()->fetchArray()[0] ?? -1;
+		if($preferred > 0)
+		{		
+			$sql = $db->prepare("select tag_name from tags where tagid= :preferred ");
+			$sql->bindValue(":preferred", $preferred, SQLITE3_INTEGER);
+			$tag = $sql->execute()->fetchArray()[0] ?? '';
+			$tag = str_replace(" ", "_", $tag);
+		}
+	}
 	$db = null;
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
@@ -68,6 +91,8 @@
 		</div>
 		<!--<main class="row">-->
 		<?php
+			echo "<!-- Tag: " . $tag . " -->";
+			echo "<!-- Query: " . $query . " -->";
 			
 			echo "<hr />";
 			
@@ -250,7 +275,14 @@
 		$(document).ready(function()
 		{
 			input = document.getElementById("tags");
-			input.value = "";
+			input.value = <?php echo json_encode($tag, JSON_UNESCAPED_UNICODE); ?>;
+			<?php 
+				if ($tag != ""){
+					echo "GetParent(input.value);";
+					echo "GetSibling(input.value);";
+					echo "GetCategory(input.value);";
+				}
+			?>
 			awesomplete = new Awesomplete(input, { sort: false } );
 			input.focus();
 			
