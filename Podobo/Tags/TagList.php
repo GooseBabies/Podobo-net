@@ -117,20 +117,18 @@
 	//$tagcount = count($tags);
 	$pagecount = ceil($tagcount/$rowpageamount);
 
-    $db = null;
-?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
-	<head>
-		<meta http-equiv="Content-Type" content="text/html" charset="utf-8" />
-		<meta name="viewport" content="width=device-width, initial-scale=1">
-	    <title>Podobo - Tags</title>
-	    <link rel="stylesheet" type="text/css" href="../../style/PodoboStyle.css" />		
-		<link rel="stylesheet" href="../../style/w3.css">
-		<link rel="icon" type="image/x-icon" href="../../imgs/favicon.ico">
-		<!-- <script type = "text/javascript" src = "https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script> -->
-		<script type = "text/javascript" src = "../../js/jquery-3.6.0.min.js"></script>
-	    <style type="text/css" media="screen">
+	$PageTitle = "Podobo - Tag List";
+	$InTags = true;
+
+	function customPageHeader(){?>
+		<script>
+			$(document).ready(function()
+			{				
+				var HeaderButton = document.getElementById("tags");
+				HeaderButton.className = "w3-bar-item w3-button w3-theme-l1";
+			});
+		</script>
+		<style type="text/css" media="screen">
 			table{
 				border-collapse:collapse;
 				border:2px solid #FFFFFF;
@@ -151,19 +149,12 @@
 				margin:6px;
 			}
 		</style>
+	<?php }
 
-	</head>
-	<body>
-	<div class="w3-bar w3-theme w3-left-align w3-medium container_header">
-			<a class="w3-bar-item w3-button w3-hide-small w3-hover-blue-grey" href="../Posts.php">Posts</a>		
-			<a class="w3-bar-item w3-button w3-theme-l1" href="TagList.php">Tags</a>
-			<a class="w3-bar-item w3-button w3-hide-small w3-hover-blue-grey" href="../Wiki.php">Wiki</a>
-			<a class="w3-bar-item w3-button w3-hide-small w3-hover-blue-grey" href="../Slideshow.php">Slideshow</a>
-			<a class="w3-bar-item w3-button w3-hide-small w3-hover-blue-grey" href="../Tools.php">Tools</a>
-		</div>
-		<div class="w3-bar w3-theme-l1 w3-left-align w3-small container_subheader">
-			<a class="w3-bar-item w3-button w3-theme-l1" href="TagList.php">Tag List</a>
-		</div>
+	include_once('../header.php');
+
+    $db = null;
+?>
 		<main class="row">
 		<?php
 			
@@ -205,13 +196,13 @@
 			
 			echo "<table><tr>";
 			
-			echo "<th>Tag ID</th><th>Tag</th><th>Category</th><th>Count</th></tr>";		
+			echo "<th>Tag ID</th><th>Tag</th><th>Edit/Wiki</th><th>Category</th><th>Count</th></tr>";		
 			
 			for($i = 0; $i < count($tags); $i++){
 				echo "<tr>";
 				echo "<td>" . $tags[$i][0] . "</td>";
                 echo "<td><a href ='../Posts.php?search=" . htmlspecialchars(str_replace(" ", "_", $tags[$i][1]), ENT_QUOTES) ."&page=1'>"  . $tags[$i][1] . "</a></td>";
-				echo "<td><a href='Tag.php?tagid=" . $tags[$i][0] . "'>Edit Tag</a></td>";
+				echo "<td><a href='Tag.php?tagid=" . $tags[$i][0] . "'>Edit Tag</a> - <a href='../wiki/" . htmlspecialchars(str_replace(" ", "_", $tags[$i][1]), ENT_QUOTES) . "'>Wiki</a></td>";
 				echo "<td>" . $TagCategoryTitle[$tags[$i][3]] . "</td>";
                 echo "<td>" . $tags[$i][2] . "</td>";
 				echo "</tr>";

@@ -417,3 +417,31 @@ input[type=button] {
 #otherpages{
   color: lightgray;
 }
+
+#recent {
+  display: none;
+}
+
+#oldest {
+  display: none;
+}
+
+#videos {
+  display: none;
+}
+
+#ignored-tags {
+  display: none;
+}
+
+#separator {
+  display: none;
+}
+
+#edit-tags {
+  display: none;
+}
+
+#search-indicator {
+  display: none;
+}

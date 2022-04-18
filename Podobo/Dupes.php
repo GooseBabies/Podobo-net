@@ -46,38 +46,28 @@
 	$sql = $db->prepare("select path, height, width, sources from files where hash = :hash");
 	$sql->bindValue(":hash", $hash2, SQLITE3_TEXT);
 	$file2 = $sql->execute()->fetchArray();	
-			
-?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
-	<head>
-		<meta http-equiv="Content-Type" content="text/html" charset="utf-8" />
-		<meta name="viewport" content="width=device-width, initial-scale=1">
-	    <title>Podobo - Dupes [<?php echo $dupecount; ?>]</title>
-	    <link rel="stylesheet" type="text/css" href="../style/PodoboStyle.css" />		
-		<link rel="stylesheet" href="../style/w3.css" />
-		<!-- <script type = "text/javascript" src = "https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script> -->
-		<script type = "text/javascript" src = "../js/jquery-3.6.0.min.js"></script>
-		<link rel="icon" type="image/x-icon" href="../imgs/favicon.ico">
+
+	$PageTitle = "Podobo - Dupes";
+
+	function customPageHeader(){?>
+		<script>
+
+			$(document).ready(function()
+			{				
+				var HeaderButton = document.getElementById("tools");
+				HeaderButton.className = "w3-bar-item w3-button w3-theme-l1";
+			});
+		</script>
 		<style type="text/css">
 		input[type=button] {
 			margin: 20px;
 		}
-		</style>         
-	</head>
-	<body>
-	<div class="w3-bar w3-theme w3-left-align w3-medium container_header">
-		<a class="w3-bar-item w3-button w3-hide-small w3-hover-blue-grey" href="Posts.php">Posts</a>		
-		<a class="w3-bar-item w3-button w3-hide-small w3-hover-blue-grey" href="Tags/TagList.php">Tags</a>
-		<a class="w3-bar-item w3-button w3-hide-small w3-hover-blue-grey" href="Wiki.php">Wiki</a>
-		<a class="w3-bar-item w3-button w3-hide-small w3-hover-blue-grey" href="Slideshow.php">Slideshow</a>
-		<a class="w3-bar-item w3-button w3-theme-l1" href="Tools.php">Tools</a>
-	</div>
-	<div class="w3-bar w3-theme-l1 w3-left-align w3-small container_subheader">
-		<a class="w3-bar-item w3-button w3-theme-l1" href="BooruTag.php">Booru Tag</a>		
-		<a class="w3-bar-item w3-button w3-theme-l1" href="Tags/IgnoredTagList.php">Ignored Tag List</a>
-		<a class="w3-bar-item w3-button w3-theme-l1" href="Dupes.php">Dupes</a>
-	</div>
+		</style>
+	<?php }
+
+	include_once('header.php');
+			
+?>
 	<main class="row">
 	
 		<?php

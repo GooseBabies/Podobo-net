@@ -383,82 +383,62 @@ else
 $rownum = count($rows);
 
 $r = rand(0, $rownum);
-?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
-	<head>
-		<meta http-equiv="Content-Type" content="text/html" />
-		<meta charset="UTF-8">
-		<meta name="viewport" content="width=device-width, initial-scale=1">
-	    <title>Podobo - Posts [<?php echo $rownum; ?>]</title>
-	    <link rel="stylesheet" type="text/css" href="../style/PodoboStyle.css" />
-		<link rel="stylesheet" href="../style/w3.css" />
-		<link rel="stylesheet" href="../awesomplete/awesomplete.css">
-		<link rel="icon" type="image/x-icon" href="../imgs/favicon.ico">
-		<!-- <script type = "text/javascript" src = "https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script> -->
-		<script type = "text/javascript" src = "../js/jquery-3.6.0.min.js"></script>
-		<script type = "text/javascript" src="../awesomplete/awesomplete.js"></script>
+
+$PageTitle = "Podobo - Posts [" . $rownum . "]";
+	
+	function customPageHeader(){?>
+		<script>		
+			function ListView() {
+				var elements = document.getElementsByClassName("posts");
+				for (i = 0; i < elements.length; i++) {
+					elements[i].style.width = "100%";
+					elements[i].style.height = "151px";
+					//elements[i].classList.add("w3-center");
+				}
+
+				var nametext = document.getElementsByClassName("nametext");
+				while(nametext.length){
+					nametext[0].className = "nametext-list";
+				}
+
+				var vidandsoundmarker = document.getElementsByClassName(" vidandsoundmarker");
+				while( vidandsoundmarker.length){
+					vidandsoundmarker[0].className = " vidandsoundmarker-list";
+				}
+
+				var vidmarker = document.getElementsByClassName(" vidmarker");
+				while( vidmarker.length){
+					vidmarker[0].className = " vidmarker-list";
+				}
+
+				var nowrap = document.getElementsByClassName("nowrap");
+				while(nowrap.length) {
+					nowrap[0].classList.remove("nowrap");
+				}
+			}
+
+			$(document).ready(function()
+			{				
+				var HeaderButton = document.getElementById("posts");
+				HeaderButton.className = "w3-bar-item w3-button w3-theme-l1";
+			});
+		</script>
 		<style type="text/css">
 			input[type=text] {
 			width: 240px;
 			}
 		</style>
-	<script>
-		
-		function ListView() {
-			var elements = document.getElementsByClassName("posts");
-			for (i = 0; i < elements.length; i++) {
-				elements[i].style.width = "100%";
-				elements[i].style.height = "151px";
-				//elements[i].classList.add("w3-center");
-			}
+	<?php }
 
-			var nametext = document.getElementsByClassName("nametext");
-			while(nametext.length){
-				nametext[0].className = "nametext-list";
-			}
-
-			var vidandsoundmarker = document.getElementsByClassName(" vidandsoundmarker");
-			while( vidandsoundmarker.length){
-				vidandsoundmarker[0].className = " vidandsoundmarker-list";
-			}
-
-			var vidmarker = document.getElementsByClassName(" vidmarker");
-			while( vidmarker.length){
-				vidmarker[0].className = " vidmarker-list";
-			}
-
-			var nowrap = document.getElementsByClassName("nowrap");
-			while(nowrap.length) {
-				nowrap[0].classList.remove("nowrap");
-			}
-		}
-	</script>
-
-	</head>
-	<body>
-		<?php
-			//echo "<div class='container'>";
-			echo "<div class='w3-bar w3-theme w3-left-align w3-medium container_header'>";
-				echo "<a class='w3-bar-item w3-button w3-theme-l1' href='Posts.php'>Posts</a>";
-				echo "<a class='w3-bar-item w3-button w3-hide-small w3-hover-blue-grey' href='Tags/TagList.php'>Tags</a>";
-				echo "<a class='w3-bar-item w3-button w3-hide-small w3-hover-blue-grey' href='Wiki.php'>Wiki</a>";
-				echo "<a class='w3-bar-item w3-button w3-hide-small w3-hover-blue-grey' href='Slideshow.php'>Slideshow</a>";
-				echo "<a class='w3-bar-item w3-button w3-hide-small w3-hover-blue-grey' href='Tools.php'>Tools</a>";
-			echo "</div>";
-			echo "<div class='w3-bar w3-theme-l1 w3-left-align w3-small container_subheader'>";
-				echo "<a class='w3-bar-item w3-button w3-theme-l1' href='Posts.php'>Recent</a>";	
-				echo "<a class='w3-bar-item w3-button w3-theme-l1' href='Post.php?id=" . $r . "'>Random</a>";
-				echo "<a class='w3-bar-item w3-button w3-theme-l1' href='Posts.php?page=" . ceil($rownum/105) . "'>Oldest</a>";
-				echo "<a class='w3-bar-item w3-button w3-theme-l1' href='Posts.php?search=%24video'>Videos</a>";
-				echo "<a class='w3-bar-item w3-button w3-theme-l1' href='Posts.php?search=%24dur>600'>Studio Videos</a>";
-				echo "<a class='w3-bar-item w3-button w3-theme-l1' onclick='ListView()'>List</a>";
-			echo "</div>";
-			echo "<main class='row'>";
-			echo "<div class='col-1 w3-theme main-left'>";
-                        echo "<div>";
-			echo "<h4 class='w3-bar-item'><b>Tags</b></h4>";
+	include_once('header.php');
+?>
+					
+			<main class="row">
+			<div class="col-1 w3-theme main-left">
+                        <div>
+			<h4 class="w3-bar-item"><b>Tags</b></h4>
 			
+			<?php
 			$sql2 = "select tag_name, category, tag_count from tags order by tag_count desc limit 40";
 			$result2 = $db->query($sql2);
 			while ($row = $result2->fetchArray()) {
@@ -473,7 +453,7 @@ $r = rand(0, $rownum);
 				//echo"<div>";
 				echo "<form class='tagadd' action='Posts.php' method='GET'>";
 					//echo "<input type='text' id='search' name='search' oninput='TagSuggestions(this.value)' value='".$search."' />";
-					echo "<input type='text' id='tags' oninput='TagSuggestions(this.value)' name='search' value='" . htmlspecialchars($search, ENT_QUOTES) . "'  data-multiple/>";
+					echo "<input type='text' id='tag-input' oninput='TagSuggestions(this.value)' name='search' value='" . htmlspecialchars($search, ENT_QUOTES) . "'  data-multiple/>";
 					echo "<input type='submit' hidden />";
 				echo"</form>";
 				//echo "</div>";
@@ -565,7 +545,7 @@ $r = rand(0, $rownum);
 			var input;
 			$(document).ready(function()
 			{
-				input = document.getElementById("tags");
+				input = document.getElementById("tag-input");
 				awesomplete = new Awesomplete(input, { sort: false, tabSelect: true , filter: function(text, input) {
 						//console.log(input.match(/[^ ]*$/));
 						//return Awesomplete.FILTER_CONTAINS(text.value, input.match(/[^ ]*$/)[0]); 

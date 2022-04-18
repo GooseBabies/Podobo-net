@@ -38,8 +38,8 @@
 	$r = rand(0, $idcount);
 
 	$index = array_search($id, array_column($files, 0));
-	//echo "<!-- " . $index . "-->";
-	//echo "<!-- " . $files[$index][0] . "-->";	
+	echo "<!-- " . $index . "-->";
+	echo "<!-- " . $files[$index][0] . "-->";	
 				
 	$sql = "SELECT path, tag_list, overall_rating, media_rating, individual_rating, sexual_rating, height, width, sources FROM files where ID='" . $id . "'";
 	$result = $db->query($sql);
@@ -69,10 +69,185 @@
 	array_multisort($order, SORT_ASC, $tags);
 	
 	$lastcat = -1;
-	
-	$PageTitle = "Podobo - " . $id;
 
-	function customPageHeader(){?>
+	$sql = "SELECT message_id FROM status where id=1";
+	$result = $db->query($sql);
+	$status = $result->fetchArray()[0] ?? 0;
+
+	switch($status) {
+		case 0:
+			$message = "Podobo Stopped";
+			$state = 0;
+			$progress = "";
+			break;
+		case 1:
+			$message = "Idle";
+			$state = 1;
+			$progress = "";
+			break;
+		case 2:
+			$message = "Initializing";
+			$state = 3;
+			$progress = "";
+			break;
+		case 3:
+			$message = "Importing new Images";
+			$state = 3;
+			$sql = "SELECT import_progress FROM status where id=1";
+			$result = $db->query($sql);
+			$progress = " - " . $result->fetchArray()[0] ?? '';
+			break;
+		case 4:
+			$message = "IQDB in Progress";
+			$state = 2;
+			$sql = "SELECT iqdb_progress FROM status where id=1";
+			$result = $db->query($sql);
+			$iqdb = $result->fetchArray()[0] ?? '';
+			$progress = " - " . $iqdb . " / 300";
+			break;
+		case 5:
+			$message = "Processing Dupes";
+			$state = 3;
+			$sql = "SELECT dupes_progress FROM status where id=1";
+			$result = $db->query($sql);
+			$progress = " - " . $result->fetchArray()[0] ?? '';
+			break;
+		case 6:
+			$message = "Auto Tagging";
+			$state = 2;
+			$sql = "SELECT auto_booru_progress FROM status where id=1";
+			$result = $db->query($sql);
+			$auto_booru = $result->fetchArray()[0] ?? '';
+			$progress = " - " . $auto_booru . " / 300";
+			break;
+		case 7:
+			$message = "Retro Parents Work";
+			$state = 3;
+			$sql = "SELECT closing_progress FROM status where id=1";
+			$result = $db->query($sql);
+			$progress = " - " . $result->fetchArray()[0] ?? '';
+			break;
+		case 8:
+			$message = "Retro Siblings Work";
+			$state = 3;
+			$sql = "SELECT closing_progress FROM status where id=1";
+			$result = $db->query($sql);
+			$progress = " - " . $result->fetchArray()[0] ?? '';
+			break;
+		case 9:
+			$message = "Adding to Trash";
+			$state = 3;
+			$sql = "SELECT closing_progress FROM status where id=1";
+			$result = $db->query($sql);
+			$progress = " - " . $result->fetchArray()[0] ?? '';
+			break;
+		case 10:
+			$message = "Removing Broken Tags";
+			$state = 3;
+			$sql = "SELECT closing_progress FROM status where id=1";
+			$result = $db->query($sql);
+			$progress = " - " . $result->fetchArray()[0] ?? '';
+			break;
+		case 11:
+			$message = "Removing Duplicate Sources";
+			$state = 3;
+			$sql = "SELECT closing_progress FROM status where id=1";
+			$result = $db->query($sql);
+			$progress = " - " . $result->fetchArray()[0] ?? '';
+			break;
+		case 12:
+			$message = "Calculating Missing P-hashes";
+			$state = 3;
+			$sql = "SELECT closing_progress FROM status where id=1";
+			$result = $db->query($sql);
+			$progress = " - " . $result->fetchArray()[0] ?? '';
+			break;
+		case 13:
+			$message = "Checking for Deleted Files";
+			$state = 3;
+			$sql = "SELECT closing_progress FROM status where id=1";
+			$result = $db->query($sql);
+			$progress = " - " . $result->fetchArray()[0] ?? '';
+			break;
+		case 14:
+			$message = "Recalculating Tag Counts";
+			$state = 3;
+			$sql = "SELECT closing_progress FROM status where id=1";
+			$result = $db->query($sql);
+			$progress = " - " . $result->fetchArray()[0] ?? '';
+			break;
+		case 15:
+			$message = "Removing Broken Siblings";
+			$state = 3;
+			$sql = "SELECT closing_progress FROM status where id=1";
+			$result = $db->query($sql);
+			$progress = " - " . $result->fetchArray()[0] ?? '';
+			break;
+		case 16:
+			$message = "Removing Broken Parents";
+			$state = 3;
+			$sql = "SELECT closing_progress FROM status where id=1";
+			$result = $db->query($sql);
+			$progress = " - " . $result->fetchArray()[0] ?? '';
+			break;
+		case 17:
+			$message = "Emptying Trash";
+			$state = 3;
+			$sql = "SELECT closing_progress FROM status where id=1";
+			$result = $db->query($sql);
+			$progress = " - " . $result->fetchArray()[0] ?? '';
+			break;
+		case 18:
+			$message = "Backing Up Database";
+			$state = 3;
+			$sql = "SELECT closing_progress FROM status where id=1";
+			$result = $db->query($sql);
+			$progress = " - " . $result->fetchArray()[0] ?? '';
+			break;
+		case 19:
+			$message = "Rotating Images CW";
+			$state = 3;
+			$sql = "SELECT closing_progress FROM status where id=1";
+			$result = $db->query($sql);
+			$progress = " - " . $result->fetchArray()[0] ?? '';
+			break;
+		case 19:
+			$message = "Rotating Images CCW";
+			$state = 3;
+			$sql = "SELECT closing_progress FROM status where id=1";
+			$result = $db->query($sql);
+			$progress = " - " . $result->fetchArray()[0] ?? '';
+			break;
+			
+		default:
+			$message = "Closing Job";
+			$state = 3;
+			$sql = "SELECT closing_progress FROM status where id=1";
+			$result = $db->query($sql);
+			$progress = " - " . $result->fetchArray()[0] ?? '';
+			break;
+	}
+
+	$sql = "SELECT iqdb_progress FROM status where id=1";
+	$result = $db->query($sql);
+	$iqdbcount = $result->fetchArray()[0] ?? '';
+			
+?>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html" charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+	    <title>Podobo - <?php echo $id; ?></title>
+	    <link rel="stylesheet" type="text/css" href="../style/PodoboStyle.css" />		
+		<link rel="stylesheet" href="../style/w3.css" />
+		<link rel="stylesheet" href="../awesomplete/awesomplete.css">
+		<link rel="icon" type="image/x-icon" href="../imgs/favicon.ico">
+        <!-- <script type = "text/javascript" src = "https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script> -->
+		<script type = "text/javascript" src = "../js/jquery-3.6.0.min.js"></script>
+		<script type = "text/javascript" src="../awesomplete/awesomplete.js"></script>
+		<!-- <script src="https://kit.fontawesome.com/710df8e4cb.js" crossorigin="anonymous"></script> -->
+		<!-- <script src="../js/710df8e4cb-edit.js" crossorigin="anonymous"></script> -->
+		<script src="../style/releases/v5.15.4/js/all.min.js" crossorigin="anonymous"></script>
+		<base target="_parent" />
 		<script>              
 			function hidetags(){
 				var content = document.getElementById("mr");
@@ -116,16 +291,6 @@
 					destry[0].remove();
 				}
 			}
-
-			$(document).ready(function()
-			{				
-				var HeaderButton = document.getElementById("posts");
-				HeaderButton.className = "w3-bar-item w3-button w3-theme-l1";
-
-				document.getElementById("separator").style.display = "block";
-                document.getElementById("edit-tags").style.display = "block";
-                document.getElementById("search-indicator").style.display = "block";
-			});
 		</script>
 		<style type="text/css">
 		.fa-star {
@@ -133,10 +298,28 @@
 			margin: 3px;
 		}
 		</style>
-	<?php }
+	</head>
+	<body>
+            <div class="w3-bar w3-theme w3-left-align w3-medium container_header">
+                <a class="w3-bar-item w3-button w3-theme-l1" href="Posts.php">Posts</a>		
+				<a class="w3-bar-item w3-button w3-hide-small w3-hover-blue-grey" href="Tags/TagList.php">Tags</a>
+				<a class="w3-bar-item w3-button w3-hide-small w3-hover-blue-grey" href="Wiki.php">Wiki</a>
+				<a class="w3-bar-item w3-button w3-hide-small w3-hover-blue-grey" href="Slideshow.php">Slideshow</a>
+				<a class="w3-bar-item w3-button w3-hide-small w3-hover-blue-grey" href="Tools.php">Tools</a>
+				<a class="w3-bar-item w3-theme-l1"> | </a>
+				<a class="w3-bar-item w3-button w3-hide-small w3-hover-blue-grey"><?php echo $message . $progress; ?></a>
 
-	include_once('header.php');
-?>
+            </div>
+			<div class="w3-bar w3-theme-l1 w3-left-align w3-small container_subheader">
+                <a class="w3-bar-item w3-button w3-theme-l1" href="Posts.php">Recent</a>		
+				<a class="w3-bar-item w3-button w3-theme-l1" href="Post.php?id=<?php echo $r; ?>">Random</a>
+				<a class="w3-bar-item w3-button w3-theme-l1" href="Posts.php?page=<?php echo ceil($idcount/105) ?>">Oldest</a>
+				<a class="w3-bar-item w3-button w3-theme-l1" href="Posts.php?search=%24video">Videos</a>
+				<a class="w3-bar-item w3-button w3-theme-l1" href="Posts.php?search=%24dur>600">Studio Videos</a>
+				<a class="w3-bar-item w3-theme-l1">|</a>
+				<a class="w3-bar-item w3-button w3-theme-l1" onclick="showEdit()">Edit Tags</a>
+				<a class="w3-bar-item w3-button w3-theme-l1" href='<?php if($_SESSION["search"] != "") { echo "Posts.php?search=" . $_SESSION["search"] . "'>Search: " . $_SESSION["search"]; } else { echo "Posts.php'>Search: All"; }; ?></a>
+            </div>
             <main class="row">
                 <div class="col-2 w3-theme main-left">
 		
@@ -220,7 +403,7 @@
 
 			echo "<div class='tagadd'>";
 				//echo "<form>";
-				echo "<input type='text' id='tag-input' oninput='TagSuggestions(this.value)' onpaste='textPaste()'/>";
+				echo "<input type='text' id='tags' oninput='TagSuggestions(this.value)' onpaste='textPaste()'/>";
 				//echo "<input type='hidden' onsubmit='AddTag()'/>";
 				//echo "</form>";
 
@@ -404,7 +587,7 @@
 		var id = <?php echo $id; ?>;
 		$(document).ready(function()
 		{
-			input = document.getElementById("tag-input");
+			input = document.getElementById("tags");
 			awesomplete = new Awesomplete(input, { sort: false } );
 			input.focus();
 

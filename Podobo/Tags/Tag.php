@@ -99,155 +99,142 @@
 	while ($row = $result->fetchArray()) {
         array_push($tagmap, $row);
     }
-	
-	$db = null;
-?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
-	<head>
-		<meta http-equiv="Content-Type" content="text/html" charset="utf-8" />
-		<meta name="viewport" content="width=device-width, initial-scale=1">
-		<link rel="stylesheet" type="text/css" href="../../style/PodoboStyle.css" />
-		<link rel="stylesheet" type="text/css" href="../../style/w3.css" />
-		<link rel="stylesheet" href="../../awesomplete/awesomplete.css">
-		<link rel="icon" type="image/x-icon" href="../../imgs/favicon.ico">
-	    <title>Piaz-Online - <?php echo $tag[0] . " (" . $tagid . ")"; ?></title>
-		<script type = "text/javascript" src = "../../js/jquery-3.6.0.min.js"></script>
-		<script type = "text/javascript" src = "../../awesomplete/awesomplete.js"></script>
-        <style type="text/css" media="screen">
+
+	$PageTitle = "Piaz-Online - " . $tag[0] . " (" . $tagid . ")";
+	$InTags = true;
+
+	function customPageHeader(){?>
+		<script>
+			function showEdit()
+			{
+				var edit_div = document.getElementById("edit-tag");
+				var parent_div = document.getElementById("add-parent");
+				var child_div = document.getElementById("add-child");
+				var alias_div = document.getElementById("add-alias");
+				if (edit_div.style.display === "inline") 
+				{
+					edit_div.style.display = "none";					
+				} 
+				else 
+				{
+					edit_div.style.display = "inline";
+					if (parent_div.style.display === "inline") 
+					{
+						parent_div.style.display = "none";					
+					}
+					if (child_div.style.display === "inline") 
+					{
+						child_div.style.display = "none";					
+					}
+					if (alias_div.style.display === "inline") 
+					{
+						alias_div.style.display = "none";					
+					}
+					edit_input.focus();
+				}
+			}
+
+			function showParent(){
+				var edit_div = document.getElementById("edit-tag");
+				var parent_div = document.getElementById("add-parent");
+				var child_div = document.getElementById("add-child");
+				var alias_div = document.getElementById("add-alias");
+				if (parent_div.style.display === "inline") 
+				{
+					parent_div.style.display = "none";					
+				} 
+				else 
+				{
+					parent_div.style.display = "inline";
+					if (edit_div.style.display === "inline") 
+					{
+						edit_div.style.display = "none";					
+					}
+					if (child_div.style.display === "inline") 
+					{
+						child_div.style.display = "none";					
+					}
+					if (alias_div.style.display === "inline") 
+					{
+						alias_div.style.display = "none";					
+					}
+					parent_input.focus();
+				}
+			}
+
+			function showChild(){
+				var edit_div = document.getElementById("edit-tag");
+				var parent_div = document.getElementById("add-parent");
+				var child_div = document.getElementById("add-child");
+				var alias_div = document.getElementById("add-alias");
+				if (child_div.style.display === "inline") 
+				{
+					child_div.style.display = "none";					
+				} 
+				else 
+				{
+					child_div.style.display = "inline";
+					if (edit_div.style.display === "inline") 
+					{
+						edit_div.style.display = "none";					
+					}
+					if (parent_div.style.display === "inline") 
+					{
+						parent_div.style.display = "none";					
+					}
+					if (alias_div.style.display === "inline") 
+					{
+						alias_div.style.display = "none";					
+					}
+					child_input.focus();
+				}
+			}
+
+			function showAlias(){
+				var edit_div = document.getElementById("edit-tag");
+				var parent_div = document.getElementById("add-parent");
+				var child_div = document.getElementById("add-child");
+				var alias_div = document.getElementById("add-alias");
+				if (alias_div.style.display === "inline") 
+				{
+					alias_div.style.display = "none";					
+				} 
+				else 
+				{
+					alias_div.style.display = "inline";
+					child_div.style.display = "inline";
+					if (edit_div.style.display === "inline") 
+					{
+						edit_div.style.display = "none";					
+					}
+					if (parent_div.style.display === "inline") 
+					{
+						parent_div.style.display = "none";					
+					}
+					if (child_div.style.display === "inline") 
+					{
+						child_div.style.display = "none";					
+					}
+					alias_input.focus();
+				}
+			}
+			$(document).ready(function()
+			{				
+				var HeaderButton = document.getElementById("tags");
+				HeaderButton.className = "w3-bar-item w3-button w3-theme-l1";
+			});
+		</script>
+
+		<style type="text/css" media="screen">
 			div {
                 display: block;
             }
 		</style>
-		<script>
-		function showEdit()
-		{
-			var edit_div = document.getElementById("edit-tag");
-			var parent_div = document.getElementById("add-parent");
-			var child_div = document.getElementById("add-child");
-			var alias_div = document.getElementById("add-alias");
-			if (edit_div.style.display === "inline") 
-			{
-				edit_div.style.display = "none";					
-			} 
-			else 
-			{
-				edit_div.style.display = "inline";
-				if (parent_div.style.display === "inline") 
-				{
-					parent_div.style.display = "none";					
-				}
-				if (child_div.style.display === "inline") 
-				{
-					child_div.style.display = "none";					
-				}
-				if (alias_div.style.display === "inline") 
-				{
-					alias_div.style.display = "none";					
-				}
-				edit_input.focus();
-			}
-		}
+	<?php }
 
-		function showParent(){
-			var edit_div = document.getElementById("edit-tag");
-			var parent_div = document.getElementById("add-parent");
-			var child_div = document.getElementById("add-child");
-			var alias_div = document.getElementById("add-alias");
-			if (parent_div.style.display === "inline") 
-			{
-				parent_div.style.display = "none";					
-			} 
-			else 
-			{
-				parent_div.style.display = "inline";
-				if (edit_div.style.display === "inline") 
-				{
-					edit_div.style.display = "none";					
-				}
-				if (child_div.style.display === "inline") 
-				{
-					child_div.style.display = "none";					
-				}
-				if (alias_div.style.display === "inline") 
-				{
-					alias_div.style.display = "none";					
-				}
-				parent_input.focus();
-			}
-		}
-
-		function showChild(){
-			var edit_div = document.getElementById("edit-tag");
-			var parent_div = document.getElementById("add-parent");
-			var child_div = document.getElementById("add-child");
-			var alias_div = document.getElementById("add-alias");
-			if (child_div.style.display === "inline") 
-			{
-				child_div.style.display = "none";					
-			} 
-			else 
-			{
-				child_div.style.display = "inline";
-				if (edit_div.style.display === "inline") 
-				{
-					edit_div.style.display = "none";					
-				}
-				if (parent_div.style.display === "inline") 
-				{
-					parent_div.style.display = "none";					
-				}
-				if (alias_div.style.display === "inline") 
-				{
-					alias_div.style.display = "none";					
-				}
-				child_input.focus();
-			}
-		}
-
-		function showAlias(){
-			var edit_div = document.getElementById("edit-tag");
-			var parent_div = document.getElementById("add-parent");
-			var child_div = document.getElementById("add-child");
-			var alias_div = document.getElementById("add-alias");
-			if (alias_div.style.display === "inline") 
-			{
-				alias_div.style.display = "none";					
-			} 
-			else 
-			{
-				alias_div.style.display = "inline";
-				child_div.style.display = "inline";
-				if (edit_div.style.display === "inline") 
-				{
-					edit_div.style.display = "none";					
-				}
-				if (parent_div.style.display === "inline") 
-				{
-					parent_div.style.display = "none";					
-				}
-				if (child_div.style.display === "inline") 
-				{
-					child_div.style.display = "none";					
-				}
-				alias_input.focus();
-			}
-		}
-		</script>
-
-	</head>
-	<body>
-		<div class="w3-bar w3-theme w3-left-align w3-medium container_header">
-			<a class="w3-bar-item w3-button w3-hide-small w3-hover-blue-grey" href="../Posts.php">Posts</a>		
-			<a class="w3-bar-item w3-button w3-theme-l1" href="TagList.php">Tags</a>
-			<a class="w3-bar-item w3-button w3-hide-small w3-hover-blue-grey" href="../Wiki.php">Wiki</a>
-			<a class="w3-bar-item w3-button w3-hide-small w3-hover-blue-grey" href="../Slideshow.php">Slideshow</a>
-			<a class="w3-bar-item w3-button w3-hide-small w3-hover-blue-grey" href="../Tools.php">Tools</a>
-		</div>
-		<div class="w3-bar w3-theme-l1 w3-left-align w3-small container_subheader">
-			<a class="w3-bar-item w3-button w3-theme-l1" href="TagList.php">Tag List</a>
-		</div>
-		<?php
+	include_once('../header.php');
+	
+	$db = null;
 			
 			echo "<hr />";
 			
