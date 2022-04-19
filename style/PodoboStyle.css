@@ -356,7 +356,7 @@ input, select{
   margin-right: 5px;
 }
 
-input[type=text] {
+input[type=text], input[type=password] {
   margin: 5px;
   width: 300px;
 }

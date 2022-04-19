@@ -107,7 +107,7 @@
 					echo "<label>Tag:</label>";
 				echo "</div>";
 				echo "<div class='w3-center'>";
-					echo "<input type='text' id='tags' oninput='TagSuggestions(this.value, 0)' />";		
+					echo "<input type='text' id='tag-input' oninput='TagSuggestions(this.value, 0)' />";		
 					//echo "<input type='submit' hidden />";
 				echo "</div>";
 				echo "<div class='w3-center'>";
@@ -258,7 +258,7 @@
 		var resdiv;
 		$(document).ready(function()
 		{
-			input = document.getElementById("tags");
+			input = document.getElementById("tag-input");
 			input.value = <?php echo json_encode($tag, JSON_UNESCAPED_UNICODE); ?>;
 			<?php 
 				if ($tag != ""){

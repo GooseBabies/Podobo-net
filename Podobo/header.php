@@ -1,6 +1,17 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <?php	
+
+	if(!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true){ 
+		if(!password_verify("#3MH7BtoJ3s&Rj8$", $_COOKIE["pass"])){
+			header("location: login.php");
+			exit;
+		}
+		else{
+			$_SESSION["loggedin"] = true;
+		}
+	}
+
 	$db = new SQLite3("C:\\Users\\Chris\\AppData\\Roaming\\Paiz\\Database\\nevada.db");
 
 	$sql = "SELECT message_id FROM status where id=1";

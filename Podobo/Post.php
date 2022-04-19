@@ -27,11 +27,11 @@
 			$result = $db->query("SELECT ID, name, overall_rating, video, sound, tag_list FROM files order by id desc");				
 			while ($row = $result->fetchArray()) {
 				array_push($files, $row);
-			}
-			$_SESSION["search"] = "";
+			}			
 			$_SESSION["image_data"] = $files;
 			$filtered = false;
 		}
+		$_SESSION["search"] = "";
 		$idcount = count($files)-1;
 	}
 

@@ -45,11 +45,6 @@
 	</head>
 	<body>
 	<div class="w3-bar w3-theme w3-left-align w3-medium container_header">
-		<!-- <a class="w3-bar-item w3-button w3-hide-small w3-hover-blue-grey" href="Podobo/Posts.php">Posts</a>		
-		<a class="w3-bar-item w3-button w3-hide-small w3-hover-blue-grey" href="Podobo/Tags/TagList.php">Tags</a>
-		<a class="w3-bar-item w3-button w3-hide-small w3-hover-blue-grey" href="Podobo/Wiki.php">Wiki</a>
-		<a class="w3-bar-item w3-button w3-hide-small w3-hover-blue-grey" href="Podobo/Slideshow.php">Slideshow</a>
-		<a class="w3-bar-item w3-button w3-hide-small w3-hover-blue-grey" href="Podobo/Tools.php">Tools</a> -->
 	</div>
 </body>
 </html>
