@@ -36,8 +36,9 @@
 	$postp = $db->query("select * from booru_proc where processed = 0 order by random() limit 1")->fetchArray() ?? '';	
 	$postpcount = $db->query("select distinct count(*) from booru_proc where processed = 0")->fetchArray()[0] ?? '';
 	
-	$query = "select * from tags where tag_name = '" . str_replace("_", " ", $postp[2]) . "' COLLATE NOCASE";
-	$tag_item = $db->query($query)->fetchArray() ?? '';
+	$sql = $db->prepare("select * from tags where tag_name = :tag COLLATE NOCASE");
+	$sql->bindValue(":tag", str_replace("_", " ", $postp[2]), SQLITE3_TEXT);
+	$tag_item = $sql->execute()->fetchArray() ?? '';
 	if($tag_item != ''){
 		$tag = str_replace(" ", "_", $tag_item[1]);
 	}
@@ -70,13 +71,19 @@
 				HeaderButton.className = "w3-bar-item w3-button w3-theme-l1";
 			});
 		</script>
+		<style type="text/css">
+		#siblings-indicator {
+            color: gray;
+			margin-left: 5px;
+			margin-right: 5px;
+		}
+		</style>
 	<?php }
 
 	include_once('header.php');
 
 	$db = null;
 			echo "<!-- Tag: " . $tag . " -->";
-			echo "<!-- Query: " . $query . " -->";
 			
 			echo "<hr />";
 			
@@ -161,11 +168,13 @@
 			//sibling tag
 			echo "<div id='siblingdiv' class='w3-center'>";
 				echo "<div>";
-					echo "<label>Alias Siblings:</label>";
+					echo "<i id='siblings-indicator' class='fa-solid fa-circle'></i>";
+					echo "<label>Alias Siblings:</label>";					
 				echo "</div>";
 				echo "<div>";
-					echo "<textarea id='sibling' rows='6' cols='40' oninput='AddedSiblings()'></textarea>";
+					echo "<textarea id='sibling' rows='6' cols='40' oninput='AddedSiblings()'></textarea>";					
 				echo "</div>";
+				//echo "<div></div>";
 			echo "</div>";
 			
 			echo "<hr />";
@@ -290,6 +299,7 @@
 			submit = document.getElementById("submitbutton");
 			
 			resdiv = document.getElementById("response");
+			sib_ind = document.getElementById("siblings-indicator");
 		
 			input.addEventListener("awesomplete-select", (event) => {
 				GetParent(event.text.value);
@@ -399,12 +409,10 @@
 		function GetCategory(data)
 		{
 			$.ajax({
-				url: 'Tags/CategoryAjax.php?txt=' + data,
+				url: 'Tags/CategoryAjax.php?txt=' + encodeURIComponent(data),
 				type: 'get',
 				dataType: 'JSON',
 				success: function(response){
-					//console.log(response);
-					//category.selectedIndex = response;
 					category.value = response;
 				},
 				error: function(xhr, ajaxOptions, thrownError)
@@ -416,8 +424,28 @@
 		
 		function AddedSiblings()
 		{
-			//console.log("howdy");
 			providedsiblings = false;
+
+			sibling.value = sibling.value.replace(/ $/g, "_");
+
+			$.ajax({
+				url: 'Tags/CheckSiblingsAjax.php?siblings=' + sibling.value.split('\n').join('+'),
+				type: 'get',
+				dataType: 'JSON',
+				success: function(response){
+					//console.log(response);
+					if(response == 1){
+						sib_ind.style.color = "yellow";
+					}
+					else{
+						sib_ind.style.color = "gray";
+					}
+				},
+				error: function(xhr, ajaxOptions, thrownError)
+				{
+					console.log(xhr.responseText);
+				}
+			});
 		}
 		
 		function SubmitTags()

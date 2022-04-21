@@ -183,7 +183,7 @@
 	    <title><?= isset($PageTitle) ? $PageTitle : "Default Title"?></title>
 	    <link rel="stylesheet" type="text/css" href="<?= isset($InTags) ? "../" : ""?>../style/PodoboStyle.css" />		
 		<link rel="stylesheet" href="<?= isset($InTags) ? "../" : ""?>../style/w3.css" />
-		<link rel="stylesheet" href="../awesomplete/awesomplete.css">
+		<link rel="stylesheet" href="<?= isset($InTags) ? "../" : ""?>../awesomplete/awesomplete.css">
 		<link rel="icon" type="image/x-icon" href="<?= isset($InTags) ? "../" : ""?>../imgs/favicon.ico">
 		<script type = "text/javascript" src = "<?= isset($InTags) ? "../" : ""?>../js/jquery-3.6.0.min.js"></script>
 		<script type = "text/javascript" src="<?= isset($InTags) ? "../" : ""?>../awesomplete/awesomplete.js"></script>
@@ -227,7 +227,7 @@
             }
         </script>
         <style type="text/css">
-		.fa-circle {
+		#state-indicator {
             <?php
             switch($state){
                 case 0:
@@ -255,7 +255,7 @@
 				<a id="slideshow" class="w3-bar-item w3-button w3-hide-small w3-hover-blue-grey" href="<?= isset($InTags) ? "../" : ""?>Slideshow.php" onmouseenter="General_Enter()">Slideshow</a>
 				<a id="tools" class="w3-bar-item w3-button w3-hide-small w3-hover-blue-grey" href="<?= isset($InTags) ? "../" : ""?>Tools.php" onmouseenter="Tools_Enter()">Tools</a>
 				<a class="w3-bar-item w3-theme-l1"> | </a>
-				<a class="w3-bar-item w3-button w3-hide-small w3-hover-blue-grey"><?php echo "<i class='fa-solid fa-circle'></i> " . $message . $progress; ?></a>
+				<a class="w3-bar-item w3-button w3-hide-small w3-hover-blue-grey"><?php echo "<i id='state-indicator' class='fa-solid fa-circle'></i> " . $message . $progress; ?></a>
 
             </div>
 			<div id="subheader" class="w3-bar w3-theme-l1 w3-left-align w3-small container_subheader">

@@ -3,7 +3,9 @@
 	
 	if(isset($_GET["txt"])) { $txt = html_entity_decode($_GET["txt"]); } else { $txt = ""; };
 	
-	$category = $db->query("select category from tags where tag_name = '" . str_replace("_", " ", $txt) . "'")->fetchArray()[0] ?? '';
+	$sql = $db->prepare("select category from tags where tag_name = :tag");
+	$sql->bindValue(':tag', str_replace("_", " ", $txt), SQLITE3_TEXT);
+	$category = $sql->execute()->fetchArray()[0] ?? -1;
 	
 	echo json_encode($category);			
 	
