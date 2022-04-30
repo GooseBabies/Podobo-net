@@ -8,6 +8,8 @@
     $childids = [];
     $aliases = [];
     $aliasids = [];
+	$preferred = [];
+    $preferredids = [];
 	$tagmap = [];
 
 	$db = new SQLite3("C:\\Users\\Chris\\AppData\\Roaming\\Paiz\\Database\\nevada.db");	
@@ -89,6 +91,22 @@
         $sql->bindValue(':tagid', $aliasid, SQLITE3_INTEGER);
 	    $aliastag = $sql->execute()->fetchArray()[0];
         array_push($aliases, array($aliasid, $aliastag));
+    }
+
+	//Aliases
+
+    $sql = $db->prepare("select preferred from siblings where alias = :tagid");
+    $sql->bindValue(':tagid', $tagid, SQLITE3_INTEGER);
+	$result = $sql->execute();
+	while ($row = $result->fetchArray()) {
+        array_push($preferredids, $row[0]);
+    }
+
+    foreach($preferredids as $preferredid){
+        $sql = $db->prepare("select tag_name from tags where tagid = :tagid");
+        $sql->bindValue(':tagid', $preferredid, SQLITE3_INTEGER);
+	    $preferredtag = $sql->execute()->fetchArray()[0];
+        array_push($preferred, array($preferredid, $preferredtag));
     }
 
 	//tag Map
@@ -377,7 +395,7 @@
 			    echo "</div>\r\n";
             }	
 
-			//sibling
+			//alias
 			if(!empty($aliases)){
 			    echo "<hr />";
 
@@ -387,7 +405,26 @@
                 foreach($aliases as $alias){
                     echo "<div id='" . $alias[0] . "'>";
                     echo "<label>ID: <a href='Tag.php?tagid=" . $alias[0] . "'> " . $alias[0] . "</a> - Tag: <a href='../Posts.php?page=1&search=" . str_replace(" ", "_", $alias[1]) . "'>" . $alias[1] . "</a></label>";
+					echo "<input type='Button' value='Swap' onclick='SwapSibling(" . $alias[0] . ", " . $tagid . ")' />";
                     echo "<input type='Button' value='x' onclick='RemoveSibling(" . $alias[0] . ", " . $tagid . ")' />";
+                    echo "</div>";
+                }
+				
+			    echo "</div>\r\n";
+            }	
+
+			//preferred
+			if(!empty($preferred)){
+			    echo "<hr />";
+
+                echo "<div id='preferreddiv' class='w3-center'>\r\n";
+                echo "<p><strong>Preferred</strong> (This Tag is Preferred to " . $tag[0] . ")</p><p>-</p>";
+
+                foreach($preferred as $prefer){
+                    echo "<div id='" . $prefer[0] . "'>";
+                    echo "<label>ID: <a href='Tag.php?tagid=" . $prefer[0] . "'> " . $prefer[0] . "</a> - Tag: <a href='../Posts.php?page=1&search=" . str_replace(" ", "_", $prefer[1]) . "'>" . $prefer[1] . "</a></label>";
+					echo "<input type='Button' value='Swap' onclick='SwapSibling(" . $tagid . ", " . $prefer[0] . ")' />";
+                    echo "<input type='Button' value='x' onclick='RemoveSibling(" . $tagid . ", " . $prefer[0] . ")' />";
                     echo "</div>";
                 }
 				
@@ -466,6 +503,9 @@
 						break;
 					case 5:
 						return "(Sankaku Complex)";
+						break;
+					case 5:
+						return "(Hydrus PTR)";
 						break;
 					default:
 						return "(google)";
@@ -779,6 +819,30 @@
 							console.log(response);
 							var rem = document.getElementById(response);
 							rem.innerHTML = "<del style='color:red;'>" + rem.innerHTML + "</del>";
+						}				
+					}
+				},
+				error: function(xhr, ajaxOptions, thrownError)
+				{
+					console.log(xhr.responseText);
+				}
+			});
+		}
+
+		function SwapSibling(aliasid, preferredid)
+		{
+			$.ajax({
+				url: 'SwapSiblingAjax.php?aliasid=' + aliasid + '&preferredid=' + preferredid,
+				type: 'get',
+				dataType: 'JSON',
+				success: function(response){
+					if(response.length > 0)
+					{							
+						if(response == "Error"){
+							console.log("Error with Remove Sibling");
+						}	
+						else{
+							resdiv.innerHTML += "<div><p>" + response + "</p></div>";	
 						}				
 					}
 				},

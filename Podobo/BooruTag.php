@@ -88,22 +88,25 @@
 			echo "<hr />";
 			
 			echo "<div class='w3-center'>";
-			echo "<p>" . $postpcount . " Tags Left</p>";
+			echo "<p>" . $postpcount . " Tags Left - " . GetBooruSource($postp[3]) . "</p>";
 				//echo "<form autocomplete='off'>\r\n";
-					echo '<input type="text" name="query" value="' . $postp[2] . '" />';
+					echo "<input type='text' name='query' value=" . json_encode($postp[2], JSON_UNESCAPED_UNICODE) . " />";
 					//echo "<input type='submit' hidden />\r\n";
 				//echo "</form>\r\n";
 				
 				echo "<div class='w3-center'>";
-					echo '<a href="' . GetBooruLink($postp[3]) . $postp[2] . '" target="_blank">' . $postp[2] . ' ' . GetBooruSource($postp[3]) . '</a>';
+					echo "<a href='" . "https://rule34.xxx/index.php?page=post&s=list&tags=" . $postp[2] . "' target='_blank'>" . $postp[2] . " (rule34.xxx)</a>";
 				echo "</div>";
-				if($postp[3] != 0)
-				{
-					echo "<div class='w3-center'>";
-						echo "<p> - </p>";
-						echo "<a href='" . "https://danbooru.donmai.us/posts?tags=" . $postp[2] . "' target='_blank'>" . $postp[2] . " (Danbooru)</a>";
-					echo "</div>";
-				}
+
+				echo "<div class='w3-center'>";
+					echo "<p> - </p>";
+					echo "<a href='" . "https://e621.net/posts?tags=" . $postp[2] . "' target='_blank'>" . $postp[2] . " (e621)</a>";
+				echo "</div>";
+
+				echo "<div class='w3-center'>";
+					echo "<p> - </p>";
+					echo "<a href='" . "https://danbooru.donmai.us/posts?tags=" . $postp[2] . "' target='_blank'>" . $postp[2] . " (Danbooru)</a>";
+				echo "</div>";
 			echo "</div>";
 			
 			echo "<hr />";
@@ -237,6 +240,9 @@
 						break;
 					case 5:
 						return "(Sankaku Complex)";
+						break;
+					case 6:
+						return "(Hydrus PTR)";
 						break;
 					default:
 						return "(google)";
