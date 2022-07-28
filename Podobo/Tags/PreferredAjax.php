@@ -1,5 +1,6 @@
 <?php
 	$db = new SQLite3("C:\\Users\\Chris\\AppData\\Roaming\\Paiz\\Database\\nevada.db");
+	$db->busyTimeout(100);
 	
 	if(isset($_GET["txt"])) { $txt = html_entity_decode($_GET["txt"]); } else { $txt = ""; };
 	$rows = [];

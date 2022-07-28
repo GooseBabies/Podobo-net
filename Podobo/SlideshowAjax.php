@@ -1,5 +1,6 @@
 <?php
 	$db = new SQLite3("C:\\Users\\Chris\\AppData\\Roaming\\Paiz\\Database\\nevada.db");	
+	$db->busyTimeout(100);
 	
 	if(isset($_GET["id"])) { $id = $_GET["id"]; } else { $id = 0; };	
 	

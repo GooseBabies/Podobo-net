@@ -1,5 +1,6 @@
 <?php
 	$db = new SQLite3("C:\\Users\\Chris\\AppData\\Roaming\\Paiz\\Database\\nevada.db");
+	$db->busyTimeout(100);
 	
 	if(isset($_GET["tag"])) { $tag = html_entity_decode($_GET["tag"]); } else { $tag = ""; };
 	if(isset($_GET["id"])) { $id = $_GET["id"]; } else { $id = -1; }; 
@@ -7,58 +8,62 @@
 
 	$tag = str_replace("_", " ", $tag);
 	
-	if($tag != "" and $id != -1)
-	{
-		//echo $tag;
-		if($category == 17){
-			if(!CheckIfSourceExists($id, $tag)){
-				$sources = GetSources($id);
-				//echo print_r($sources);
-				array_push($sources, $tag);
-				//echo print_r($sources);
-				AddSource($id, implode(" ", $sources));
-				UpdateAutoBooruFlag($id);
+	try{
+		if($tag != "" and $id != -1)
+		{
+			$db->exec('BEGIN;');
+            $db->enableExceptions(true);
+
+			if($category == 17){
+				if(!CheckIfSourceExists($id, $tag)){
+					$sources = GetSources($id);
+					array_push($sources, $tag);
+					AddSource($id, implode(" ", $sources));
+					UpdateAutoBooruFlag($id);
+				}
 			}
-		}
-		else{
-			$sql = $db->prepare("select hash from files where id = :id");
-			$sql->bindValue(':id', $id , SQLITE3_INTEGER);
-			$hash = $sql->execute()->fetchArray()[0] ?? '';
-
-			$sql = $db->prepare("select tagid from tags where tag_name = :tag");
-			$sql->bindValue(':tag', $tag, SQLITE3_TEXT);
-			$tagid = $sql->execute()->fetchArray()[0] ?? -1;
-
-			if($tagid == -1 and $hash != '')
-			{
-				$sql = $db->prepare("INSERT INTO tags (tag_name, category, tag_display, tag_count) VALUES (:tag, :category, :tag_display, 0);");
-				$sql->bindValue(':tag', $tag, SQLITE3_TEXT);
-				$sql->bindValue(':category', $category, SQLITE3_INTEGER);
-				$sql->bindValue(':tag_display', $tag, SQLITE3_TEXT);
-				$result = $sql->execute();
+			else{
+				$sql = $db->prepare("select hash from files where id = :id");
+				$sql->bindValue(':id', $id , SQLITE3_INTEGER);
+				$hash = $sql->execute()->fetchArray()[0] ?? '';
 
 				$sql = $db->prepare("select tagid from tags where tag_name = :tag");
 				$sql->bindValue(':tag', $tag, SQLITE3_TEXT);
-				$tagid = $sql->execute()->fetchArray()[0] ?? '';
+				$tagid = $sql->execute()->fetchArray()[0] ?? -1;
 
-				if (!CheckDuplicateTags($tagid, $hash))
+				if($tagid == -1 and $hash != '')
 				{
-					AddNewTag($tagid, $hash);
-					CheckForParentTags($tagid, $hash);
+					$sql = $db->prepare("INSERT INTO tags (tag_name, category, tag_display, tag_count, alias, preferred, child, parent) VALUES (:tag, :category, :tag_display, 0, 0, 0, 0, 0);");
+					$sql->bindValue(':tag', $tag, SQLITE3_TEXT);
+					$sql->bindValue(':category', $category, SQLITE3_INTEGER);
+					$sql->bindValue(':tag_display', $tag, SQLITE3_TEXT);
+					$result = $sql->execute();
+					
+					$tagid = $db->lastInsertRowid();
+
+					if (!CheckDuplicateTags($tagid, $hash))
+					{
+						AddNewTag($tagid, $hash);
+						CheckForParentTags($tagid, $hash);
+					}
+				}
+				else if ($tagid > -1)
+				{
+					if (!CheckDuplicateTags($tagid, $hash))
+					{
+						AddNewTag($tagid, $hash);
+						CheckForParentTags($tagid, $hash);
+					}
 				}
 			}
-			else if ($tagid > -1)
-			{
-				if (!CheckDuplicateTags($tagid, $hash))
-				{
-					AddNewTag($tagid, $hash);
-					CheckForParentTags($tagid, $hash);
-				}
-			}
+			$db->exec('COMMIT;');
+			echo json_encode("");
 		}
+	}catch(exception $e){
+		$output = $db->lastErrorMsg();
+		$db->exec('ROLLBACK;');
 	}
-
-    echo json_encode("");
+	
 	$db = null;
 	
 	function CheckDuplicateTags($tagid, $hash)

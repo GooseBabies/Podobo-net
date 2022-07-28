@@ -1,5 +1,6 @@
 <?php
 	$db = new SQLite3("C:\\Users\\Chris\\AppData\\Roaming\\Paiz\\Database\\nevada.db");	
+    $db->busyTimeout(100);
 	
 	if(isset($_GET["siblings"])) { $siblings = html_entity_decode($_GET["siblings"]); } else { $siblings = ""; };	
 

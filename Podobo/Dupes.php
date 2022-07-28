@@ -1,28 +1,28 @@
 <?php
 	session_start();
+	
+	$db = new SQLite3("C:\\Users\\Chris\\AppData\\Roaming\\Paiz\\Database\\nevada.db");	
+	$db->busyTimeout(100);
 	$files = [];
-
-	$db = new SQLite3("C:\\Users\\Chris\\AppData\\Roaming\\Paiz\\Database\\nevada.db");
-
-	$files = [];
-	if(isset($_SESSION["filtered_data"]) && count($_SESSION["filtered_data"]) > 0){
-		$files = $_SESSION["filtered_data"];
+	if(isset($_SESSION["filtered_ids"]) && count($_SESSION["filtered_ids"]) > 0){
+		$files = $_SESSION["filtered_ids"];
 		$idcount = count($files)-1;
 		$filtered = true;
 	}
 	else{
-		if(isset($_SESSION["image_data"])){
-			$files = $_SESSION["image_data"];				
+		if(isset($_SESSION["all_ids"])){
+			$files = $_SESSION["all_ids"];				
 			$filtered = false;
 		}
 		else{		
-			$result = $db->query("SELECT ID, name, overall_rating, video, sound, tag_list FROM files order by id desc");				
+			$result = $db->query("SELECT ID FROM files order by id desc");				
 			while ($row = $result->fetchArray()) {
 				array_push($files, $row);
-			}
-			$_SESSION["image_data"] = $files;
+			}			
+			$_SESSION["all_ids"] = $files;
 			$filtered = false;
 		}
+		$_SESSION["search"] = "";
 		$idcount = count($files)-1;
 	}
 
@@ -32,7 +32,7 @@
 	$result = $db->query($sql);
 	$dupecount = $result->fetchArray()[0];
 	
-	$sql = "SELECT hash_1, hash_2, score FROM dupes where processed=0 order by random() limit 1";
+	$sql = "SELECT hash_1, hash_2, score FROM dupes where processed=0 order by score asc limit 1";
 	$result = $db->query($sql);
 	$row = $result->fetchArray();
 

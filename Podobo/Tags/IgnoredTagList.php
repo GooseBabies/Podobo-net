@@ -1,31 +1,29 @@
 <?php
 	session_start();
-	//$TagOrder=array(14,4,0,1,2,3,8,6,7,9,10,12,13,11,16,5,15);
-	//$TagCategoryTitle=array("General", "IP/Series", "Individual", "", "Artist", "Studio/Network", "Sex", "Afilliation/Group", "Race/Species/Ethnicity", "Body Part", "Clothing/Accessory", "Position", "Setting", "Action", "Meta", "Title", "Release Date");
     $ignored = [];
 
 	$db = new SQLite3("C:\\Users\\Chris\\AppData\\Roaming\\Paiz\\Database\\nevada.db");	
 
 	$files = [];
-	if(isset($_SESSION["filtered_data"]) && count($_SESSION["filtered_data"]) > 0){
-		$files = $_SESSION["filtered_data"];
+	if(isset($_SESSION["filtered_ids"]) && count($_SESSION["filtered_ids"]) > 0){
+		$files = $_SESSION["filtered_ids"];
 		$idcount = count($files)-1;
 		$filtered = true;
-		//$index = searchForId($id, $files);
 	}
 	else{
-		if(isset($_SESSION["image_data"])){
-			$files = $_SESSION["image_data"];				
+		if(isset($_SESSION["all_ids"])){
+			$files = $_SESSION["all_ids"];				
 			$filtered = false;
 		}
 		else{		
-			$result = $db->query("SELECT ID, name, overall_rating, video, sound, tag_list FROM files order by id desc");				
+			$result = $db->query("SELECT ID FROM files order by id desc");				
 			while ($row = $result->fetchArray()) {
 				array_push($files, $row);
-			}
-			$_SESSION["image_data"] = $files;
+			}			
+			$_SESSION["all_ids"] = $files;
 			$filtered = false;
 		}
+		$_SESSION["search"] = "";
 		$idcount = count($files)-1;
 	}
 
@@ -124,6 +122,9 @@
 						break;
 					case 5:
 						return "(Sankaku Complex)";
+						break;
+					case 6:
+						return "(Hydrus PTR)";
 						break;
 					default:
 						return "(google)";

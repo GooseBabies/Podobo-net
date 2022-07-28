@@ -1,118 +1,267 @@
 <?php
 	session_start();
 	$tags = [];
-	$TagCategoryTitle=array("General", "IP/Series", "Individual", "", "Artist", "Studio/Network", "Sex", "Afilliation/Group", "Race/Species/Ethnicity", "Body Part", "Clothing/Accessory", "Position", "Setting", "Action", "Meta", "Title", "Release Date");
+	$tagids= [];
+	$page_tag_data = [];
+	$tag_limit = 100;
+	$TagCategoryTitle=array("General", "IP/Series", "Individual", "Rating", "Artist", "Studio/Network", "Sex", "Afilliation/Group", "Race/Species/Ethnicity", "Body Part", "Clothing/Accessory", "Position", "Setting", "Action", "Meta", "Title", "Release Date");
 
 	$db = new SQLite3("C:\\Users\\Chris\\AppData\\Roaming\\Paiz\\Database\\nevada.db");	
 	
 	if(isset($_GET["page"])) { $page = $_GET["page"]; } else { $page = 1; };
-    if(isset($_GET["search"])) { $search = $_GET["search"]; } else { $search = ''; };
+    if(isset($_GET["search"])) { $search = html_entity_decode($_GET["search"]); } else { $search = ''; };
 	if(isset($_GET["cat"])) { $cat = $_GET["cat"]; } else { $cat = -1; }
+	if(isset($_GET["aliases"])) { $aliases = $_GET["aliases"]; } else { $aliases = 0; }
+	if(isset($_GET["order"])) { $order = $_GET["order"]; } else { $order = 0; }
+	if(isset($_GET["desc"])) { $desc = $_GET["desc"]; } else { $desc = 0; }
 	$rowpageamount = 100;
 
 	$files = [];
-	if(isset($_SESSION["filtered_data"]) && count($_SESSION["filtered_data"]) > 0){
-		$files = $_SESSION["filtered_data"];
+	if(isset($_SESSION["filtered_ids"]) && count($_SESSION["filtered_ids"]) > 0){
+		$files = $_SESSION["filtered_ids"];
 		$idcount = count($files)-1;
 		$filtered = true;
-		//$index = searchForId($id, $files);
 	}
 	else{
-		if(isset($_SESSION["image_data"])){
-			$files = $_SESSION["image_data"];				
+		if(isset($_SESSION["all_ids"])){
+			$files = $_SESSION["all_ids"];				
 			$filtered = false;
 		}
 		else{		
-			$result = $db->query("SELECT ID, name, overall_rating, video, sound, tag_list FROM files order by id desc");				
+			$result = $db->query("SELECT ID FROM files order by id desc");				
 			while ($row = $result->fetchArray()) {
 				array_push($files, $row);
-			}
-			$_SESSION["image_data"] = $files;
+			}			
+			$_SESSION["all_ids"] = $files;
 			$filtered = false;
 		}
+		$_SESSION["search"] = "";
 		$idcount = count($files)-1;
 	}
-
+	
 	$r = rand(0, $idcount);
-	
-	$offset = ($page - 1) * $rowpageamount;
-	if(empty($search)){
-		if($cat == -1){
-			$sql = $db->prepare("select tagid, tag_name, tag_count, category from tags where tag_count > 0 order by tag_name COLLATE NOCASE limit 100 OFFSET :offset");
-			$sql->bindValue(':offset', $offset, SQLITE3_TEXT);
-			$result = $sql->execute();
-			while ($row = $result->fetchArray()) {
-				array_push($tags, $row);
-			}	
-			$sql = $db->prepare("SELECT COUNT(*) FROM tags where tag_count > 0");
-			$tagcount = $sql->execute()->fetchArray()[0] ?? 0;	
+
+	$offset = ($page - 1) * $tag_limit;
+	$parentid = -1;
+	$childid = -1;
+	$aliasid = -1;
+	$preferredid = -1;
+	$order_column = "tag_name";
+	$asc = "asc";
+
+	switch($order){
+		case 0:
+			$order_column = "tag_name";
+			break;
+		case 1:
+			$order_column = "tagid";
+			break;
+		case 2:
+			$order_column = "tag_count";
+			break;
+		case 3:
+			$order_column = "category";
+			break;
+		default:
+			$order_column = "tag_name";
+			break;
+	}
+
+	switch($desc){
+		case 0:
+			$asc = " ASC";
+			break;
+		case 1:
+			$asc = " DESC";
+			break;;
+		default:
+			$asc = " ASC";
+			break;
+	}
+
+	if(isset($_SESSION["tag_ids"]) and $search == "" && $cat == -1 && $aliases == 0)
+	{
+		$sql = $db->prepare("SELECT tag_name, tag_count, category, alias FROM tags order by " . $order_column . $asc . " limit :limit offset :offset");
+		$sql->bindValue(':limit', $tag_limit, SQLITE3_INTEGER);
+		$sql->bindValue(':offset', $offset, SQLITE3_INTEGER);
+		//echo "<!--" . $sql->getSQL() . "-->";
+		$result = $sql->execute();
+		while ($row = $result->fetchArray()) {
+			array_push($page_tag_data, $row);
 		}
-		else if($cat == -2){
-			$sql = $db->prepare("select tagid, tag_name, tag_count, category from tags where category != 15 and tag_count > 0 order by tag_name COLLATE NOCASE limit 100 OFFSET :offset");
-			$sql->bindValue(':offset', $offset, SQLITE3_TEXT);
-			$sql->bindValue(':category', $cat, SQLITE3_INTEGER);
+
+		$_SESSION["tagsearch"] = $search;
+		$tagids = $_SESSION["tag_ids"];
+		unset($_SESSION["filtered_tag_ids"]);
+		$filtered = false;
+	}
+	else
+	{
+		if($search == "" && $cat == -1 && $aliases == 0)
+		{
+			$sql = $db->prepare("SELECT tagid FROM tags COLLATE NOCASE order by " . $order_column . $asc . "");
 			$result = $sql->execute();
 			while ($row = $result->fetchArray()) {
-				array_push($tags, $row);
+				array_push($tagids, $row);
 			}
-			$sql = $db->prepare("SELECT COUNT(*) FROM tags where category != 15 and tag_count > 0");
-			$sql->bindValue(':category', $cat, SQLITE3_INTEGER);
-			$tagcount = $sql->execute()->fetchArray()[0] ?? 0;
+
+			$sql = $db->prepare("SELECT tag_name, tag_count, category, alias FROM tags COLLATE NOCASE order by " . $order_column . $asc . " limit :limit offset :offset");
+			$sql->bindValue(':limit', $tag_limit, SQLITE3_INTEGER);
+			$sql->bindValue(':offset', $offset, SQLITE3_INTEGER);
+			echo "<!--" . $sql->getSQL() . "-->";
+			$result = $sql->execute();
+			while ($row = $result->fetchArray()) {
+				array_push($page_tag_data, $row);
+			}
+			
+			$_SESSION["tagsearch"] = $search;
+			$_SESSION["tag_ids"] = $tagids; //only store session data for full sql call
+			unset($_SESSION["filtered_tag_ids"]);
+			$filtered = false;
 		}
-		else{
-			$sql = $db->prepare("select tagid, tag_name, tag_count, category from tags where category = :category and tag_count > 0 order by tag_name COLLATE NOCASE limit 100 OFFSET :offset");
-			$sql->bindValue(':offset', $offset, SQLITE3_TEXT);
+		else
+		{	
+			$_SESSION["tagsearch"] = $search;
+			//echo $search;
+			
+			if(empty($search)){
+				if($cat == -1){
+					$sql_ids = "select tagid from tags where alias = 0 COLLATE NOCASE order by " . $order_column . $asc;
+					$sql_page = "select tag_name, tag_count, category, alias from tags where alias = 0 COLLATE NOCASE order by " . $order_column . $asc . " limit :limit OFFSET :offset";		
+				}
+				else if($cat == -2){
+					
+					if($aliases == 1){
+						$sql_ids = "select tagid from tags where category != 15 COLLATE NOCASE order by " . $order_column . $asc;
+						$sql_page = "select tag_name, tag_count, category, alias from tags where category != 15 COLLATE NOCASE order by " . $order_column . $asc . " limit :limit OFFSET :offset";
+					}
+					else{
+						$sql_ids = "select tagid from tags where category != 15 and alias = 0 COLLATE NOCASE order by " . $order_column . $asc;
+						$sql_page = "select tag_name, tag_count, category, alias from tags where category != 15 and alias = 0 COLLATE NOCASE order by " . $order_column . $asc . " limit :limit OFFSET :offset";
+					}
+				}
+				else{
+					if($aliases == 1){
+						$sql_ids = "select tagid from tags where category = :category COLLATE NOCASE order by " . $order_column . $asc;
+						$sql_page = "select tag_name, tag_count, category, alias from tags where category = :category COLLATE NOCASE order by " . $order_column . $asc . " limit :limit OFFSET :offset";
+					}
+					else{
+						$sql_ids = "select tagid from tags where category = :category and alias = 0 COLLATE NOCASE order by " . $order_column . $asc;
+						//echo "<!--" . $sql_ids . "-->";
+						$sql_page = "select tag_name, tag_count, category, alias from tags where category = :category and alias = 0 COLLATE NOCASE order by " . $order_column . $asc . " limit :limit OFFSET :offset";	
+					}		
+				}
+			}
+			else{
+				$search = str_replace("_", " ", $search);
+				//echo "<!--" . $search . "-->";
+				if(str_starts_with($search, "parent:")){
+					$sql = $db->prepare("SELECT tagid FROM tags where tag_name = :tag COLLATE NOCASE");
+					$sql->bindValue(':tag', substr($search, 7), SQLITE3_TEXT);
+					$parentid = $sql->execute()->fetchArray()[0] ?? -1;
+
+					$sql_ids = "select tagid from tags where tagid in (select child from parents where parent = :parentid) COLLATE NOCASE order by " . $order_column . $asc;
+					$sql_page = "select tag_name, tag_count, category, alias from tags where tagid in (select child from parents where parent = :parentid) COLLATE NOCASE order by " . $order_column . $asc . " limit :limit OFFSET :offset";
+				}
+				else if(str_starts_with($search, "child:")){
+					$sql = $db->prepare("SELECT tagid FROM tags where tag_name = :tag COLLATE NOCASE");
+					//echo "<!--" . $search . "-->";
+					$sql->bindValue(':tag', substr($search, 6), SQLITE3_TEXT);
+					$childid = $sql->execute()->fetchArray()[0] ?? -1;
+					//echo "<!--" . $childid . "-->";
+
+					$sql_ids = "select tagid from tags where tagid in (select parent from parents where child = :childid) COLLATE NOCASE order by " . $order_column . $asc;
+					$sql_page = "select tag_name, tag_count, category, alias from tags where tagid in (select parent from parents where child = :childid) COLLATE NOCASE order by " . $order_column . $asc . " limit :limit OFFSET :offset";
+				}
+				else if(str_starts_with($search, "alias:")){
+					$sql = $db->prepare("SELECT tagid FROM tags where tag_name = :tag COLLATE NOCASE");
+					$sql->bindValue(':tag', substr($search, 6), SQLITE3_TEXT);
+					$aliasid = $sql->execute()->fetchArray()[0] ?? -1;
+					//echo "<!--" . $aliasid . "-->";
+
+					$sql_ids = "select tagid from tags where tagid in (select preferred from siblings where alias = :aliasid) COLLATE NOCASE order by " . $order_column . $asc;
+					$sql_page = "select tag_name, tag_count, category, alias from tags where tagid in (select preferred from siblings where alias = :aliasid) COLLATE NOCASE order by " . $order_column . $asc . " limit :limit OFFSET :offset";
+				}
+				else if(str_starts_with($search, "preferred:")){
+					$sql = $db->prepare("SELECT tagid FROM tags where tag_name = :tag COLLATE NOCASE");
+					$sql->bindValue(':tag', substr($search, 10), SQLITE3_TEXT);
+					$preferredid = $sql->execute()->fetchArray()[0] ?? -1;
+					echo "<!--" . $preferredid . "-->";
+
+					$sql_ids = "select tagid from tags where tagid in (select alias from siblings where preferred = :preferredid) COLLATE NOCASE order by " . $order_column . $asc;
+					$sql_page = "select tag_name, tag_count, category, alias from tags where tagid in (select alias from siblings where preferred = :preferredid) COLLATE NOCASE order by " . $order_column . $asc . " limit :limit OFFSET :offset";
+				}
+				else if($cat == -1){
+					if($aliases == 1){
+						$sql_ids = "select tagid from tags where tag_name like :search COLLATE NOCASE order by " . $order_column . $asc;
+						$sql_page = "select tag_name, tag_count, category, alias from tags where tag_name like :search COLLATE NOCASE order by " . $order_column . " limit :limit OFFSET :offset";
+					}
+					else {
+						$sql_ids = "select tagid from tags where tag_name like :search and alias = 0 COLLATE NOCASE order by " . $order_column . $asc;
+						$sql_page = "select tag_name, tag_count, category, alias from tags where tag_name like :search and alias = 0 COLLATE NOCASE order by " . $order_column . $asc . " limit :limit OFFSET :offset";	
+					}
+				}
+				else if($cat == -2){
+					if($aliases == 1){
+						$sql_ids = "select tagid from tags where category != 15 and tag_name like :search COLLATE NOCASE order by " . $order_column . $asc;
+						$sql_page = "select tag_name, tag_count, category, alias from tags where category != 15 and tag_name like :search COLLATE NOCASE order by " . $order_column . " limit :limit OFFSET :offset";
+					}
+					else {
+						$sql_ids = "select tagid from tags where category != 15 and tag_name like :search and alias = 0 COLLATE NOCASE order by " . $order_column . $asc;
+						$sql_page = "select tag_name, tag_count, category, alias from tags where category != 15 and tag_name like :search and alias = 0 COLLATE NOCASE order by " . $order_column . $asc . " limit :limit OFFSET :offset";	
+					}
+				}
+				else{
+					if($aliases == 1){
+						$sql_ids = "select tagid from tags where category = :category and tag_name like :search COLLATE NOCASE order by " . $order_column . $asc;
+						$sql_page = "select tag_name, tag_count, category, alias from tags where category = :category and tag_name like :search COLLATE NOCASE order by " . $order_column . $asc . " limit :limit OFFSET :offset";
+					}
+					else {
+						$sql_ids = "select tagid from tags where category = :category and tag_name like :search and alias = 0 COLLATE NOCASE order by " . $order_column . $asc;
+						$sql_page = "select tag_name, tag_count, category, alias from tags where category = :category and tag_name like :search and alias = 0 COLLATE NOCASE order by " . $order_column . $asc . " limit :limit OFFSET :offset";	
+					}
+				}
+			}
+
+			$sql = $db->prepare($sql_ids);
 			$sql->bindValue(':category', $cat, SQLITE3_INTEGER);
+			$sql->bindValue(':search', "%" . $search . "%", SQLITE3_TEXT);
+			$sql->bindValue(':parentid', $parentid, SQLITE3_INTEGER);
+			$sql->bindValue(':childid', $childid, SQLITE3_INTEGER);
+			$sql->bindValue(':aliasid', $aliasid, SQLITE3_INTEGER);
+			$sql->bindValue(':preferredid', $preferredid, SQLITE3_INTEGER);
+			echo "<!--" .  $sql->getsql(true) . "-->";
+			//echo "<!--" .  $order_column . "-->";
 			$result = $sql->execute();
 			while ($row = $result->fetchArray()) {
-				array_push($tags, $row);
+				array_push($tagids, $row);
 			}
-			$sql = $db->prepare("SELECT COUNT(*) FROM tags where category = :category and tag_count > 0");
+
+			$_SESSION["filtered_tag_ids"] = $tagids;
+			$filtered = true;
+
+			$sql = $db->prepare($sql_page);
 			$sql->bindValue(':category', $cat, SQLITE3_INTEGER);
-			$tagcount = $sql->execute()->fetchArray()[0] ?? 0;
+			$sql->bindValue(':search', "%" . $search . "%", SQLITE3_TEXT);
+			$sql->bindValue(':limit', $tag_limit, SQLITE3_INTEGER);
+			$sql->bindValue(':offset', $offset, SQLITE3_INTEGER);
+			$sql->bindValue(':parentid', $parentid, SQLITE3_INTEGER);
+			$sql->bindValue(':childid', $childid, SQLITE3_INTEGER);
+			$sql->bindValue(':aliasid', $aliasid, SQLITE3_INTEGER);
+			$sql->bindValue(':preferredid', $preferredid, SQLITE3_INTEGER);
+			echo "<!--" .  $sql->getsql(true) . "-->";
+			//echo "<!--" .  $order_column . "-->";
+			$result = $sql->execute();
+			while ($row = $result->fetchArray()) {
+				array_push($page_tag_data, $row);
+			}
 		}
 	}
-	else{
-		if($cat == -1){
-			$sql = $db->prepare("select tagid, tag_name, tag_count, category from tags where tag_name like :search and tag_count > 0 order by tag_name COLLATE NOCASE limit 100 OFFSET :offset");
-			$sql->bindValue(':search', "%" . $search . "%", SQLITE3_TEXT);
-			$sql->bindValue(':offset', $offset, SQLITE3_TEXT);
-			$result = $sql->execute();
-			while ($row = $result->fetchArray()) {
-				array_push($tags, $row);
-			}	
-			$sql = $db->prepare("SELECT COUNT(*) FROM tags where tag_name like :search and tag_count > 0");
-			$tagcount = $sql->execute()->fetchArray()[0] ?? 0;
-		}
-		else if($cat == -2){
-			$sql = $db->prepare("select tagid, tag_name, tag_count, category from tags where category != 15 and tag_name like :search and tag_count > 0 order by tag_name COLLATE NOCASE limit 100 OFFSET :offset");
-			$sql->bindValue(':category', $cat, SQLITE3_INTEGER);
-			$sql->bindValue(':search', "%" . $search . "%", SQLITE3_TEXT);
-			$sql->bindValue(':offset', $offset, SQLITE3_TEXT);		
-			$result = $sql->execute();
-			while ($row = $result->fetchArray()) {
-				array_push($tags, $row);
-			}
-			$sql = $db->prepare("SELECT COUNT(*) FROM tags where category != 15 and tag_name like :search and tag_count > 0");
-			$sql->bindValue(':category', $cat, SQLITE3_INTEGER);
-			$tagcount = $sql->execute()->fetchArray()[0] ?? 0;
-		}
-		else{
-			$sql = $db->prepare("select tagid, tag_name, tag_count, category from tags where category = :category and tag_name like :search and tag_count > 0 order by tag_name COLLATE NOCASE limit 100 OFFSET :offset");
-			$sql->bindValue(':category', $cat, SQLITE3_INTEGER);
-			$sql->bindValue(':search', "%" . $search . "%", SQLITE3_TEXT);
-			$sql->bindValue(':offset', $offset, SQLITE3_TEXT);		
-			$result = $sql->execute();
-			while ($row = $result->fetchArray()) {
-				array_push($tags, $row);
-			}
-			$sql = $db->prepare("SELECT COUNT(*) FROM tags where category = :category and tag_name like :search and tag_count > 0");
-			$sql->bindValue(':category', $cat, SQLITE3_INTEGER);
-			$tagcount = $sql->execute()->fetchArray()[0] ?? 0;
-		}
-	}
-	
+
+	$tagcount = count($tagids);
+
 	echo "<!--" .  $tagcount . "-->";
+	echo "<!--" .  count($page_tag_data) . "-->";
 
 	//$tagcount = count($tags);
 	$pagecount = ceil($tagcount/$rowpageamount);
@@ -172,6 +321,7 @@
 					echo "<option value='0'>General</option>";
 					echo "<option value='1'>IP</option>";
 					echo "<option value='2'>Individual</option>";
+					echo "<option value='3'>Rating</option>";
 					echo "<option value='4'>Artist</option>";
 					echo "<option value='5'>Studio</option>";
 					echo "<option value='6'>Sex</option>";
@@ -187,7 +337,20 @@
 					echo "<option value='16'>Date</option>";
 				echo "</select>";
 
-				echo "<input type='submit' value='Search'/>";
+				echo "<label for='aliases'>aliases</label>";
+				echo "<input type='checkbox' value='1' name='aliases' " . ($aliases == 1 ? "checked" : "") . " />";
+
+				echo "<select name='order' id='order'>";
+					echo "<option value='0'>Name</option>";
+					echo "<option value='1'>ID</option>";
+					echo "<option value='2'>Count</option>";
+					echo "<option value='3'>Category</option>";
+				echo "</select>";
+
+				echo "<label for='desc'>DESC</label>";
+				echo "<input type='checkbox' value='1' name='desc' " . ($desc == 1 ? "checked" : "") . " />";
+
+				echo "<input id='search-box' type='submit' value='Search'/>";
 
 				echo"</form>";
 
@@ -198,13 +361,16 @@
 			
 			echo "<th>Tag ID</th><th>Tag</th><th>Edit/Wiki</th><th>Category</th><th>Count</th></tr>";		
 			
-			for($i = 0; $i < count($tags); $i++){
+			//echo "<!--" .  $tagids[0][0] . "-->";
+
+			for($i = 0; $i < count($page_tag_data); $i++){
+				//echo "<!--" .  $page_tag_data[$i][3] . "-->";
 				echo "<tr>";
-				echo "<td>" . $tags[$i][0] . "</td>";
-                echo "<td><a href ='../Posts.php?search=" . htmlspecialchars(str_replace(" ", "_", $tags[$i][1]), ENT_QUOTES) ."&page=1'>"  . $tags[$i][1] . "</a></td>";
-				echo "<td><a href='Tag.php?tagid=" . $tags[$i][0] . "'>Edit Tag</a> - <a href='../wiki/" . htmlspecialchars(str_replace(" ", "_", $tags[$i][1]), ENT_QUOTES) . "'>Wiki</a></td>";
-				echo "<td>" . $TagCategoryTitle[$tags[$i][3]] . "</td>";
-                echo "<td>" . $tags[$i][2] . "</td>";
+				echo "<td>" . $tagids[(($page - 1) * $tag_limit) + $i][0] . "</td>";
+                echo "<td><a href ='../Posts.php?search=" . htmlspecialchars(str_replace(" ", "_", $page_tag_data[$i][0]), ENT_QUOTES) ."&page=1'>" . ($page_tag_data[$i][3] == 1 ? "<i>" : "") . $page_tag_data[$i][0] . ($page_tag_data[$i][3] == 1 ? "</i>" : "") . "</a></td>";
+				echo "<td><a href='Tag.php?tagid=" . $tagids[(($page - 1) * $tag_limit) + $i][0] . "'>Edit Tag</a> - <a href='../wiki/" . htmlspecialchars(str_replace(" ", "_", $page_tag_data[$i][0]), ENT_QUOTES) . "'>Wiki</a></td>";
+				echo "<td>" . $TagCategoryTitle[$page_tag_data[$i][2]] . "</td>";
+                echo "<td>" . $page_tag_data[$i][1] . "</td>";
 				echo "</tr>";
 			}
 			
@@ -221,23 +387,30 @@
 			
 			if($page != 1) 
 			{
-				echo "<a href='TagList.php?cat=" . $cat . "&page=1'>&lt;&lt;</a>";
-				echo "<a href='TagList.php?cat=".$cat."&page=" . ($page - 1) . "'>&lt;</a>";	
+				echo "<a href='TagList.php?search=" . htmlspecialchars($search) . "&cat=" . $cat . "&page=1'><i class='fas fa-angles-left fa-2x'></i></a>";
+				echo "<a href='TagList.php?search=" . htmlspecialchars($search) . "&cat=".$cat."&page=" . ($page - 1) . "'><i class='fas fa-angle-left fa-2x'></i></a>";	
 			};
 			
 			for($k = $offset; $k <= $end_page; $k++)
 			{
-				echo "<a href='TagList.php?cat=".$cat."&page=" . $k  . "'>";
-				if($k==$page) { echo "<strong> ".$k." </strong>"; } else { echo $k;};
-				echo "</a>";
+				if($k == $page){
+					echo "<a class='current-page' href='TagList.php?search=" . htmlspecialchars($search) . "&cat=".$cat."&page=" . $k  . "'>";
+					echo $k;
+					echo "</a>";
+				}
+				else{
+					echo "<a class='other-page' href='TagList.php?search=" . htmlspecialchars($search) . "&cat=".$cat."&page=" . $k  . "'>";
+					echo $k;
+					echo "</a>";
+				}
 			}
 			
 			echo "<!--" . $pagecount . "-->";
 
 			if($page != $pagecount) 
 			{
-				echo "<a href='TagList.php?cat=".$cat."&page=" . ($page + 1) . "'>&gt;</a>";
-				echo "<a href='TagList.php?cat=".$cat."&page=" . $pagecount . "'>&gt;&gt;</a>";
+				echo "<a href='TagList.php?search=" . htmlspecialchars($search) . "&cat=".$cat."&page=" . ($page + 1) . "'><i class='fas fa-angle-right fa-2x'></i></a>";
+				echo "<a href='TagList.php?search=" . htmlspecialchars($search) . "&cat=".$cat."&page=" . $pagecount . "'><i class='fas fa-angles-right fa-2x'></i></a>";
 			};
 			echo "</div>";
 			
@@ -249,6 +422,12 @@
 		{
 			category = document.getElementById("category");
 			category.value = <?php echo $cat; ?>;
+
+			order = document.getElementById("order");
+			order.value = <?php echo $order; ?>;
+
+			searchbox = document.getElementById("tags");
+			searchbox.value = <?php echo json_encode($search); ?>;
 		});
 		
 	</script>

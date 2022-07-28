@@ -1,7 +1,7 @@
 <?php
 	session_start();
 	//$TagOrder=array(14,4,0,1,2,8,6,7,9,10,12,13,11,16,5,15);
-	$TagCategoryTitle=array("General", "IP/Series", "Individual", "", "Artist", "Studio/Network", "Sex", "Afilliation/Group", "Race/Species/Ethnicity", "Body Part", "Clothing/Accessory", "Position", "Setting", "Action", "Meta", "Title", "Release Date");
+	$TagCategoryTitle=array("General", "IP/Series", "Individual", "Rating", "Artist", "Studio/Network", "Sex", "Afilliation/Group", "Race/Species/Ethnicity", "Body Part", "Clothing/Accessory", "Position", "Setting", "Action", "Meta", "Title", "Release Date");
     $parentids = [];
     $parents = [];
     $children = [];
@@ -11,37 +11,61 @@
 	$preferred = [];
     $preferredids = [];
 	$tagmap = [];
+	$tagids = [];
 
 	$db = new SQLite3("C:\\Users\\Chris\\AppData\\Roaming\\Paiz\\Database\\nevada.db");	
 
     if(isset($_GET["tagid"])) { $tagid = $_GET["tagid"]; } else { $tagid = 1; };
 
 	$files = [];
-	if(isset($_SESSION["filtered_data"]) && count($_SESSION["filtered_data"]) > 0){
-		$files = $_SESSION["filtered_data"];
+	if(isset($_SESSION["filtered_ids"]) && count($_SESSION["filtered_ids"]) > 0){
+		$files = $_SESSION["filtered_ids"];
 		$idcount = count($files)-1;
 		$filtered = true;
-		//$index = searchForId($id, $files);
 	}
 	else{
-		if(isset($_SESSION["image_data"])){
-			$files = $_SESSION["image_data"];				
+		if(isset($_SESSION["all_ids"])){
+			$files = $_SESSION["all_ids"];				
 			$filtered = false;
 		}
 		else{		
-			$result = $db->query("SELECT ID, name, overall_rating, video, sound, tag_list FROM files order by id desc");				
+			$result = $db->query("SELECT ID FROM files order by id desc");				
 			while ($row = $result->fetchArray()) {
 				array_push($files, $row);
-			}
-			$_SESSION["image_data"] = $files;
+			}			
+			$_SESSION["all_ids"] = $files;
 			$filtered = false;
 		}
+		$_SESSION["search"] = "";
 		$idcount = count($files)-1;
 	}
 
 	$r = rand(0, $idcount);
+
+	if(isset($_SESSION["filtered_tag_ids"]) && count($_SESSION["filtered_tag_ids"]) > 0){
+		$tagids = $_SESSION["filtered_tag_ids"];
+		$filtered = true;
+	}
+	else{
+		if(isset($_SESSION["tag_ids"])){
+			$tagids = $_SESSION["tag_ids"];				
+			$filtered = false;
+		}
+		else{		
+			$result = $db->query("SELECT tagid FROM tags order by tag_name COLLATE NOCASE");				
+			while ($row = $result->fetchArray()) {
+				array_push($tagids, $row);
+			}			
+			$_SESSION["tag_ids"] = $tagids;
+			$filtered = false;
+		}
+		$_SESSION["tagsearch"] = "";
+	}
+
+	$index = array_search($tagid, array_column($tagids, 0));
+	$tagcount = count($tagids) - 1;
 	
-	$sql = $db->prepare("select tag_name, category from tags where tagid = :tagid");
+	$sql = $db->prepare("select tag_name, category, tag_count from tags where tagid = :tagid");
     $sql->bindValue(':tagid', $tagid, SQLITE3_INTEGER);
 	$tag = $sql->execute()->fetchArray();
 
@@ -253,12 +277,51 @@
 	include_once('../header.php');
 	
 	$db = null;
+
+			echo "<div class='container_footer'>";
+
+			$taglimit = 5;
 			
+			if($index < $taglimit + 1) { $start_page = 0; } else { $start_page = $index - ($tagcount < $taglimit ? $tagcount + 1 : $taglimit);};
+			if($index > $tagcount - $taglimit) { $end_page = $tagcount; } else { $end_page = $index + ($tagcount < $taglimit ? $tagcount : $taglimit); };
+			
+			if($index != 0) 
+			{
+				echo "<a href='Tag.php?tagid=" . $tagids[0][0] . "'>";//<i class='fas fa-angles-left fa-2x'></i></a>";  data-prefix='fas' data-icon='angles-left' role='img' xmlns='http://www.w3.org/2000/svg' data-fa-i2svg=''aria-hidden='true' 
+				echo "<svg class='svg-inline--fa fa-angles-left fa-2x' focusable='false' height='20' width='20' viewBox='0 0 448 512'><path fill='currentColor' d='M77.25 256l137.4-137.4c12.5-12.5 12.5-32.75 0-45.25s-32.75-12.5-45.25 0l-160 160c-12.5 12.5-12.5 32.75 0 45.25l160 160C175.6 444.9 183.8 448 192 448s16.38-3.125 22.62-9.375c12.5-12.5 12.5-32.75 0-45.25L77.25 256zM269.3 256l137.4-137.4c12.5-12.5 12.5-32.75 0-45.25s-32.75-12.5-45.25 0l-160 160c-12.5 12.5-12.5 32.75 0 45.25l160 160C367.6 444.9 375.8 448 384 448s16.38-3.125 22.62-9.375c12.5-12.5 12.5-32.75 0-45.25L269.3 256z'></path></svg></a>";
+				echo "<a href='Tag.php?tagid=" . $tagids[$index - 1][0] . "'>";//<i class='fas fa-angle-left fa-2x'></i></a>";	
+				echo "<svg class='svg-inline--fa fa-angle-left fa-2x' focusable='false' height='20' width='20' viewBox='0 0 448 512'><path fill='currentColor' d='M192 448c-8.188 0-16.38-3.125-22.62-9.375l-160-160c-12.5-12.5-12.5-32.75 0-45.25l160-160c12.5-12.5 32.75-12.5 45.25 0s12.5 32.75 0 45.25L77.25 256l137.4 137.4c12.5 12.5 12.5 32.75 0 45.25C208.4 444.9 200.2 448 192 448z'></path></svg></a>";
+			};
+			
+			for($k = $start_page; $k <= $end_page; $k++)
+			{
+				if($k == $index){
+					echo "<a class='current-page' href='Tag.php?tgaid=".$tagids[$k][0]."'>";
+					echo ($tagids[$k][0]);
+					echo "</a>";
+				}
+				else{
+					echo "<a class='other-page' href='Tag.php?tagid=".$tagids[$k][0]."'>";
+					echo ($tagids[$k][0]);
+					echo "</a>";
+				}
+			}
+			
+			if($index != $tagcount) 
+			{
+				echo "<a href='Tag.php?tagid=".$tagids[$index + 1][0]."'>";//<i class='fas fa-angle-right fa-2x'></i></a>";
+				echo "<svg class='svg-inline--fa fa-angle-right fa-2x' focusable='false' height='20' width='20' viewBox='0 0 448 512'><path fill='currentColor' d='M64 448c-8.188 0-16.38-3.125-22.62-9.375c-12.5-12.5-12.5-32.75 0-45.25L178.8 256L41.38 118.6c-12.5-12.5-12.5-32.75 0-45.25s32.75-12.5 45.25 0l160 160c12.5 12.5 12.5 32.75 0 45.25l-160 160C80.38 444.9 72.19 448 64 448z'></path></svg></a>";
+				echo "<a href='Tag.php?tagid=".$tagids[$tagcount][0]."'>";//<i class='fas fa-angles-right fa-2x'></i></a>";
+				echo "<svg class='svg-inline--fa fa-angle-right fa-2x' focusable='false' height='20' width='20' viewBox='0 0 448 512'><path fill='currentColor' d='M246.6 233.4l-160-160c-12.5-12.5-32.75-12.5-45.25 0s-12.5 32.75 0 45.25L178.8 256l-137.4 137.4c-12.5 12.5-12.5 32.75 0 45.25C47.63 444.9 55.81 448 64 448s16.38-3.125 22.62-9.375l160-160C259.1 266.1 259.1 245.9 246.6 233.4zM438.6 233.4l-160-160c-12.5-12.5-32.75-12.5-45.25 0s-12.5 32.75 0 45.25L370.8 256l-137.4 137.4c-12.5 12.5-12.5 32.75 0 45.25C239.6 444.9 247.8 448 256 448s16.38-3.125 22.62-9.375l160-160C451.1 266.1 451.1 245.9 438.6 233.4z'></path></svg></a>";
+			};
+
+			echo "</div>";
+
 			echo "<hr />";
 			
 			echo "<div class='w3-center'>";
                 echo "<p>Tag ID - " . $tagid . "</p>";
-                echo "<p>Tag - <a href ='../Posts.php?page=1&search=" . str_replace(" ", "_", $tag[0]) . "'>" . $tag[0] . "</a></p>";
+                echo "<p>Tag - <a href ='../Posts.php?page=1&search=" . rawurlencode(str_replace(" ", "_", $tag[0])) . "'>" . $tag[0] . " (" . $tag[2] . ")</a></p>";
                 echo "<p>Category - <a href ='TagList.php?page=1&cat=" . $tag[1] . "'>" . $TagCategoryTitle[$tag[1]] . "</a></p>";
 			echo "</div>";
 
@@ -276,6 +339,7 @@
 						echo "<option value='0'>General</option>";
 						echo "<option value='1'>IP</option>";
 						echo "<option value='2'>Individual</option>";
+						echo "<option value='3'>Rating</option>";
 						echo "<option value='4'>Artist</option>";
 						echo "<option value='5'>Studio</option>";
 						echo "<option value='6'>Sex</option>";
@@ -311,6 +375,7 @@
 					echo "<option value='0'>General</option>";
 					echo "<option value='1'>IP</option>";
 					echo "<option value='2'>Individual</option>";
+					echo "<option value='3'>Rating</option>";
 					echo "<option value='4'>Artist</option>";
 					echo "<option value='5'>Studio</option>";
 					echo "<option value='6'>Sex</option>";
@@ -504,7 +569,7 @@
 					case 5:
 						return "(Sankaku Complex)";
 						break;
-					case 5:
+					case 6:
 						return "(Hydrus PTR)";
 						break;
 					default:
@@ -629,6 +694,26 @@
 				alias_input.value = alias_input.value.replace(/ /g, "_");
 			}, 0);
 		}
+
+		$(document).keydown(function(e) {
+			///console.log(e);
+			if(e.keyCode == 33) {
+				window.location.href = 'Tag.php?tagid=<?php if ($index > 0) { echo $tagids[$index - 1][0]; } else { echo $tagids[0][0]; } ?>';
+			}
+			else if(e.keyCode == 34)
+			{
+				window.location.href = 'Tag.php?tagid=<?php if ($index < $tagcount) { echo $tagids[$index + 1][0]; } else { echo $tagids[$tagcount][0]; } ?>';
+			}
+			else if(e.keyCode == 35)
+			{
+				window.location.href = 'Tag.php?tagid=<?php echo $tagids[$tagcount][0] ?>';
+			}
+			else if(e.keyCode == 36)
+			{
+				window.location.href = 'Tag.php?tagid=<?php echo $tagids[0][0] ?>';
+			}
+		});
+
 		function SubmitEdit()
 		{
 			edit_submit.value = "Submitted!"
@@ -722,31 +807,84 @@
 
 		function SubmitAlias()
 		{
-			alias_submit.value = "Submitted!"
 			var tagid = <?php echo $tagid; ?>;
 			var alias_tag = alias_input.value;
-			
+
 			$.ajax({
-				url: 'AddAliasAjax.php?tagid=' + tagid + '&alias=' + alias_tag,
+				url: 'TagCountAjax.php?tag=' + encodeURIComponent(alias_tag),
 				type: 'get',
 				dataType: 'JSON',
 				success: function(response){
-					if(response.length > 0)
-					{	
-						resdiv.innerHTML += "<div><p>" + response + "</p></div>";						
-					}
+					aliasConfirm(response);
 				},
 				error: function(xhr, ajaxOptions, thrownError)
 				{
-					//console.log(url);
 					console.log(xhr.responseText);
 					resdiv.innerHTML += "<div><p style='color:red;'>Error</p></div>";
 				}
 			});
+		}
 
-			alias_input.value = "";
-			alias_submit.value = "Submit";
-			alias_input.focus();
+		function aliasConfirm(tagcount){
+			var tagid = <?php echo $tagid; ?>;
+			var alias_tag = alias_input.value;
+
+			if(tagcount > 10){
+				if (confirm("Alias is Tagged in " + tagcount + " images. Add as Alias?") == true) {
+					alias_submit.value = "Submitted!"					
+					
+					$.ajax({
+						url: 'AddAliasAjax.php?tagid=' + tagid + '&alias=' + encodeURIComponent(alias_tag),
+						type: 'get',
+						dataType: 'JSON',
+						success: function(response){
+							if(response.length > 0)
+							{	
+								resdiv.innerHTML += "<div><p>" + response + "</p></div>";						
+							}
+						},
+						error: function(xhr, ajaxOptions, thrownError)
+						{
+							//console.log(url);
+							console.log(xhr.responseText);
+							resdiv.innerHTML += "<div><p style='color:red;'>Error</p></div>";
+						}
+					});
+
+					alias_input.value = "";
+					alias_submit.value = "Submit";
+					alias_input.focus();
+				} else {
+					resdiv.innerHTML += "<div><p style='color:red;'>Cancelled Alias Add</p></div>"
+				}
+			}
+			else{
+				alias_submit.value = "Submitted!"
+				var tagid = <?php echo $tagid; ?>;
+				var alias_tag = alias_input.value;
+				
+				$.ajax({
+					url: 'AddAliasAjax.php?tagid=' + tagid + '&alias=' + encodeURIComponent(alias_tag),
+					type: 'get',
+					dataType: 'JSON',
+					success: function(response){
+						if(response.length > 0)
+						{	
+							resdiv.innerHTML += "<div><p>" + response + "</p></div>";						
+						}
+					},
+					error: function(xhr, ajaxOptions, thrownError)
+					{
+						//console.log(url);
+						console.log(xhr.responseText);
+						resdiv.innerHTML += "<div><p style='color:red;'>Error</p></div>";
+					}
+				});
+
+				alias_input.value = "";
+				alias_submit.value = "Submit";
+				alias_input.focus();
+			}
 		}
         
 		function RemoveParent(childid, parentid)

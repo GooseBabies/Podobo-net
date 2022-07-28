@@ -10,6 +10,7 @@
     $username_err = $password_err = $login_err = "";
 
 	$db = new SQLite3("C:\\Users\\Chris\\AppData\\Roaming\\Paiz\\Database\\nevada.db");	
+    $db->busyTimeout(100);
 
     if($_SERVER["REQUEST_METHOD"] == "POST"){
         

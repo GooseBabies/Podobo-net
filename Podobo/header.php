@@ -1,4 +1,4 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml">
 <?php	
 
@@ -13,6 +13,7 @@
 	}
 
 	$db = new SQLite3("C:\\Users\\Chris\\AppData\\Roaming\\Paiz\\Database\\nevada.db");
+	$db->busyTimeout(100);
 
 	$sql = "SELECT message_id FROM status where id=1";
 	$result = $db->query($sql);
@@ -186,6 +187,7 @@
 		<link rel="stylesheet" href="<?= isset($InTags) ? "../" : ""?>../awesomplete/awesomplete.css">
 		<link rel="icon" type="image/x-icon" href="<?= isset($InTags) ? "../" : ""?>../imgs/favicon.ico">
 		<script type = "text/javascript" src = "<?= isset($InTags) ? "../" : ""?>../js/jquery-3.6.0.min.js"></script>
+		<script type = "text/javascript" src = "<?= isset($InTags) ? "../" : ""?>../js/detectmobilebrowser.js"></script>
 		<script type = "text/javascript" src="<?= isset($InTags) ? "../" : ""?>../awesomplete/awesomplete.js"></script>
 		<script src="<?= isset($InTags) ? "../" : ""?>../style/releases/v5.15.4/js/all.min.js" crossorigin="anonymous"></script>
 		<base target="_parent" />
@@ -202,6 +204,7 @@
                 document.getElementById("booru-tag").style.display = "none";
                 document.getElementById("ignored-tags").style.display = "none";
                 document.getElementById("dupes").style.display = "none";
+				document.getElementById("command").style.display = "block"; 
             }
 
             function General_Enter() {
@@ -213,6 +216,7 @@
                 document.getElementById("booru-tag").style.display = "block";
                 document.getElementById("ignored-tags").style.display = "none";
                 document.getElementById("dupes").style.display = "block";
+				document.getElementById("command").style.display = "block"; 
             }
 
             function Tools_Enter() {
@@ -223,8 +227,9 @@
                 document.getElementById("studio-videos").style.display = "none";
                 document.getElementById("booru-tag").style.display = "block";
                 document.getElementById("ignored-tags").style.display = "block";
-                document.getElementById("dupes").style.display = "block";                
-            }
+                document.getElementById("dupes").style.display = "block";     
+				document.getElementById("command").style.display = "block";            
+            }			
         </script>
         <style type="text/css">
 		#state-indicator {
@@ -249,26 +254,30 @@
 	</head>
 	<body>
             <div class="w3-bar w3-theme w3-left-align w3-medium container_header">
-                <a id="posts" class="w3-bar-item w3-button w3-hide-small w3-hover-blue-grey" href="<?= isset($InTags) ? "../" : ""?>Posts.php" onmouseenter="Posts_Enter()">Posts</a>		
+                <a id="posts" class="w3-bar-item w3-button w3-hide-small w3-hover-blue-grey" onmouseenter="Posts_Enter()">Posts</a>		
 				<a id="tags" class="w3-bar-item w3-button w3-hide-small w3-hover-blue-grey" href="<?= isset($InTags) ? "" : "Tags/"?>TagList.php" onmouseenter="General_Enter()">Tags</a>
-				<a id="wiki" class="w3-bar-item w3-button w3-hide-small w3-hover-blue-grey" href="<?= isset($InTags) ? "../" : ""?>wiki/" onmouseenter="General_Enter()">Wiki</a>
-				<a id="slideshow" class="w3-bar-item w3-button w3-hide-small w3-hover-blue-grey" href="<?= isset($InTags) ? "../" : ""?>Slideshow.php" onmouseenter="General_Enter()">Slideshow</a>
-				<a id="tools" class="w3-bar-item w3-button w3-hide-small w3-hover-blue-grey" href="<?= isset($InTags) ? "../" : ""?>Tools.php" onmouseenter="Tools_Enter()">Tools</a>
+				<a id="wiki" class="w3-bar-item w3-button w3-hide-small w3-hover-blue-grey" href="<?= isset($InTags) ? "../" : ""?>wiki/">Wiki</a>
+				<a id="slideshow" class="w3-bar-item w3-button w3-hide-small w3-hover-blue-grey" href="<?= isset($InTags) ? "../" : ""?>Slideshow.php">Slideshow</a>
+				<a id="tools" class="w3-bar-item w3-button w3-hide-small w3-hover-blue-grey" onmouseenter="Tools_Enter()">Tools</a>
 				<a class="w3-bar-item w3-theme-l1"> | </a>
-				<a class="w3-bar-item w3-button w3-hide-small w3-hover-blue-grey"><?php echo "<i id='state-indicator' class='fa-solid fa-circle'></i> " . $message . $progress; ?></a>
+				<a class="w3-bar-item w3-button w3-hide-small w3-hover-blue-grey"><i id="state-indicator" class="fa-solid fa-circle"></i></a>
+				<a class="w3-bar-item w3-button w3-hide-small w3-hover-blue-grey"><?php echo $message . $progress; ?></a>
 
             </div>
 			<div id="subheader" class="w3-bar w3-theme-l1 w3-left-align w3-small container_subheader">
                 <a id="recent" class="w3-bar-item w3-button w3-theme-l1" href="<?= isset($InTags) ? "../" : ""?>Posts.php">Recent</a>		
-                <a id="random" class="w3-bar-item w3-button w3-theme-l1" href="<?= isset($InTags) ? "../" : ""?>Post.php?id=<?php echo $r; ?>">Random</a>
+                <a id="random" class="w3-bar-item w3-button w3-theme-l1" href="<?= isset($InTags) ? "../" : ""?>Post.php?id=<?php echo $files[$r][0]; ?>">Random</a>
                 <a id="oldest" class="w3-bar-item w3-button w3-theme-l1" href="<?= isset($InTags) ? "../" : ""?>Posts.php?page=<?php echo ceil($idcount/105) ?>">Oldest</a>
                 <a id="videos" class="w3-bar-item w3-button w3-theme-l1" href="<?= isset($InTags) ? "../" : ""?>Posts.php?search=%24video">Videos</a>
                 <a id="studio-videos" class="w3-bar-item w3-button w3-theme-l1" href="<?= isset($InTags) ? "../" : ""?>Posts.php?search=%24dur>600">Studio Videos</a>
                 <a id="booru-tag" class="w3-bar-item w3-button w3-theme-l1" href="<?= isset($InTags) ? "../" : ""?>BooruTag.php">Booru Tag</a>
                 <a id="ignored-tags" class="w3-bar-item w3-button w3-theme-l1" href="<?= isset($InTags) ? "" : "Tags/"?>IgnoredTagList.php">Ignored Tag List</a>
                 <a id="dupes" class="w3-bar-item w3-button w3-theme-l1" href="<?= isset($InTags) ? "../" : ""?>Dupes.php">Dupes</a>
+				<a id="command" class="w3-bar-item w3-button w3-theme-l1" href="<?= isset($InTags) ? "../" : ""?>Command.php">Command</a>
                 <a id="separator" class="w3-bar-item w3-theme-l1">|</a>
                 <a id="edit-tags" class="w3-bar-item w3-button w3-theme-l1" onclick="showEdit()">Edit Tags</a>
+				<?php if(isset($review) && $review == 1) { echo "<a id='mark-review' class='w3-bar-item w3-button w3-theme-l1' onclick='review()'>Mark Review</a>"; } else { echo ""; } ?>
+				<?php if(isset($list_view)) { echo "<a id='list-view' class='w3-bar-item w3-button w3-theme-l1' onclick='ListView()'>List View</a>"; } else { echo ""; } ?>
                 <a id="search-indicator" class="w3-bar-item w3-button w3-theme-l1" href=<?= isset($InTags) ? "../" : ""?><?php if($_SESSION["search"] != "") { echo "'Posts.php?search=" . $_SESSION["search"] . "'>Search: " . $_SESSION["search"]; } else { echo "'Posts.php'>Search: All"; }; ?></a>                        
             </div>
 			

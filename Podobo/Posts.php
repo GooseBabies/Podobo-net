@@ -2,36 +2,56 @@
 // Start the session
 session_start();
 $thumbs_source = "thumbs/";
-$columncount = 15;
-$rowcount = 7;
+$columncount = 12;
+$rowcount = 6;
+$itemcount = $columncount * $rowcount;
 $TagColors=array("#FFFFFF", "#6495ED", "#FF4500", "#FF4500", "#FF8C00", "#7FFFD4", "#BA55D3", "#228B22", "#8A2BE2", "#FFFFFF", "#FFFFFF", "#FFFFFF", "#FFFFFF", "#FFFFFF", "#DAA520", "#8FBC8F", "#FFFFFF");
-$rows = [];
+$files = [];
+$file_page_data = [];
 $tags = [];
 
 $db = new SQLite3("C:\\Users\\Chris\\AppData\\Roaming\\Paiz\\Database\\nevada.db");
 
 if(isset($_GET["search"])) { $search = html_entity_decode($_GET["search"]); } else { $search = ""; }
 if(isset($_GET["page"])) { $page = $_GET["page"]; } else { $page = 1; }
-if(isset($_SESSION["image_data"]) and $search == "")
+if(isset($_SESSION["all_ids"]) and $search == "")
 {
+	$sql = $db->prepare("SELECT name, overall_rating, video, sound, tag_list FROM files order by ID desc limit :limit offset :offset");
+	$sql->bindValue(':limit', $itemcount, SQLITE3_INTEGER);
+	$sql->bindValue(':offset', $itemcount * ($page - 1), SQLITE3_INTEGER);
+	echo "<!--" . $sql->getSQL() . "-->";
+	$result = $sql->execute();
+	while ($row = $result->fetchArray()) {
+		array_push($file_page_data, $row);
+	}
+
 	$_SESSION["search"] = $search;
-	$rows = $_SESSION["image_data"];
-	unset($_SESSION["filtered_data"]);
+	$files = $_SESSION["all_ids"];
+	unset($_SESSION["filtered_ids"]);
 	$filtered = false;
 }
 else
 {
 	if($search == "")
 	{
-		$sql = "SELECT ID, name, overall_rating, video, sound, tag_list FROM files order by ID desc";
-		$result = $db->query($sql);
+		$sql = $db->prepare("SELECT ID FROM files order by ID desc");
+		$result = $sql->execute();
 		while ($row = $result->fetchArray()) {
-			array_push($rows, $row);
+			array_push($files, $row);
+		}
+
+		$sql = $db->prepare("SELECT name, overall_rating, video, sound, tag_list FROM files order by ID desc limit :limit offset :offset");
+		$sql->bindValue(':limit', $itemcount, SQLITE3_INTEGER);
+		$sql->bindValue(':offset', $itemcount * ($page - 1), SQLITE3_INTEGER);
+		echo "<!--" . $sql->getSQL() . "-->";
+		$result = $sql->execute();
+		while ($row = $result->fetchArray()) {
+			array_push($file_page_data, $row);
 		}
 		
 		$_SESSION["search"] = $search;
-		$_SESSION["image_data"] = $rows; //only store session data for full sql call
-		unset($_SESSION["filtered_data"]);
+		$_SESSION["all_ids"] = $files; //only store session data for full sql call
+		unset($_SESSION["filtered_ids"]);
 		$filtered = false;
 	}
 	else
@@ -40,16 +60,18 @@ else
 		// echo $search;
 		$searchtags = array_filter(explode(" ", $search));
 		//echo "<!-- " . print_r($searchtags) . " -->";
-		$sql = "select ID, name, overall_rating, video, sound, tag_list from files where";
+		$sql1 = "select ID, name, overall_rating, video, sound, tag_list from files where";
+		$sql2 = "select name, overall_rating, video, sound, tag_list from files where";
+		$sql_preposition = "";
 		for($tag_index = 0; $tag_index<count($searchtags); $tag_index++){
 			$searchtags[$tag_index] = str_replace("_", " ", $searchtags[$tag_index]);
 			if(str_contains($searchtags[$tag_index], "||")){
 				$ortags = array_filter(explode("||", $searchtags[$tag_index]));
 				if($tag_index < 1){
-					$sql .= " (";
+					$sql_preposition .= " (";
 				}
 				else{
-					$sql .= " and (";
+					$sql_preposition .= " and (";
 				}
 
 				for($or_index = 0; $or_index<count($ortags); $or_index++){
@@ -60,117 +82,149 @@ else
 											
 						if(!empty($searchtagid)){
 							if($or_index < 1){
-								$sql .= "tag_list not like '%;" . $searchtagid . ";%'";
+								$sql_preposition .= "tag_list not like '%;" . $searchtagid . ";%'";
 							}
 							else{
-								$sql .= " or tag_list not like '%;" . $searchtagid . ";%'";
+								$sql_preposition .= " or tag_list not like '%;" . $searchtagid . ";%'";
 							}
 						}
 						else{
 							if($or_index < 1){
-								$sql .= "tag_list not like '%;%" . ";%'";
+								$sql_preposition .= "tag_list not like '%;%" . ";%'";
 							}
 							else{
-								$sql .= " or tag_list not like '%;%" . ";%'";
+								$sql_preposition .= " or tag_list not like '%;%" . ";%'";
 							}
 						}
 					}
 					else if(str_starts_with($ortags[$or_index], '$ext:')){
 						if($or_index < 1){
-									$sql .= "ext ='" . substr($ortags[$or_index],5) . "'";
+								$sql_preposition .= "ext ='" . substr($ortags[$or_index],5) . "'";
 							}
 							else{
-									$sql .= " or ext ='" . substr($ortags[$or_index],5) . "'";
+								$sql_preposition .= " or ext ='" . substr($ortags[$or_index],5) . "'";
 							}
 					}
 					else if(str_starts_with($ortags[$or_index], '$dur>')){
 						if($or_index < 1){
-									$sql .= "duration > " . substr($ortags[$or_index],5) . "";
+								$sql_preposition .= "duration > " . substr($ortags[$or_index],5) . "";
 							}
 							else{
-									$sql .= " or duration > " . substr($ortags[$or_index],5) . "";
+								$sql_preposition .= " or duration > " . substr($ortags[$or_index],5) . "";
 							}
 					}						
 					else if(str_starts_with($ortags[$or_index], '$dur<')){
 						if($or_index < 1){
-									$sql .= "duration < " . substr($ortags[$or_index],5) . "";
+								$sql_preposition .= "duration < " . substr($ortags[$or_index],5) . "";
 							}
 							else{
-									$sql .= " or duration < " . substr($ortags[$or_index],5) . "";
+								$sql_preposition .= " or duration < " . substr($ortags[$or_index],5) . "";
 							}
 					}
 					else if(str_starts_with($ortags[$or_index], '$name:')){
 						if($or_index < 1){
-									$sql .= "name like '%" . str_replace('\'', '_', substr($ortags[$or_index],6)) . "%'";
+								$sql_preposition .= "name like '%" . str_replace('\'', '_', substr($ortags[$or_index],6)) . "%'";
 							}
 							else{
-									$sql .= " or name like '%" . str_replace('\'', '_', substr($ortags[$or_index],6)) . "%'";
+								$sql_preposition .= " or name like '%" . str_replace('\'', '_', substr($ortags[$or_index],6)) . "%'";
 							}
 					}
 					else if(str_starts_with($ortags[$or_index], '$!name:')){
 						if($or_index < 1){
-									$sql .= "name not like '%" . str_replace('\'', '_', substr($ortags[$or_index],7)) . "%'";
+								$sql_preposition .= "name not like '%" . str_replace('\'', '_', substr($ortags[$or_index],7)) . "%'";
 							}
 							else{
-									$sql .= " or name not like '%" . str_replace('\'', '_', substr($ortags[$or_index],7)) . "%'";
+								$sql_preposition .= " or name not like '%" . str_replace('\'', '_', substr($ortags[$or_index],7)) . "%'";
 							}
 					}
 					else if(str_starts_with($ortags[$or_index], '$rating>')){
 						if($or_index < 1){
-									$sql .= "overall_rating > " . substr($ortags[$or_index],8) . "";
+								$sql_preposition .= "overall_rating > " . substr($ortags[$or_index],8) . "";
 							}
 							else{
-									$sql .= " or overall_rating > " . substr($ortags[$or_index],8) . "";
+								$sql_preposition .= " or overall_rating > " . substr($ortags[$or_index],8) . "";
 							}
 					}						
 					else if(str_starts_with($ortags[$or_index], '$rating<')){
 						if($or_index < 1){
-									$sql .= "overall_rating < " . substr($ortags[$or_index],8) . "";
+								$sql_preposition .= "overall_rating < " . substr($ortags[$or_index],8) . "";
 							}
 							else{
-									$sql .= " or overall_rating < " . substr($ortags[$or_index],8) . "";
+								$sql_preposition .= " or overall_rating < " . substr($ortags[$or_index],8) . "";
 							}
 					}
 					else if(str_starts_with($ortags[$or_index], '$height>')){
 						if($or_index < 1){
-									$sql .= "height > " . substr($ortags[$or_index],8) . "";
+								$sql_preposition .= "height > " . substr($ortags[$or_index],8) . "";
 							}
 							else{
-									$sql .= " or height > " . substr($ortags[$or_index],8) . "";
+								$sql_preposition .= " or height > " . substr($ortags[$or_index],8) . "";
 							}
 					}						
 					else if(str_starts_with($ortags[$or_index], '$height<')){
 						if($or_index < 1){
-									$sql .= "height < " . substr($ortags[$or_index],8) . "";
+								$sql_preposition .= "height < " . substr($ortags[$or_index],8) . "";
 							}
 							else{
-									$sql .= " or height < " . substr($ortags[$or_index],8) . "";
+								$sql_preposition .= " or height < " . substr($ortags[$or_index],8) . "";
 							}
 					}
 					else if(str_starts_with($ortags[$or_index], '$sound')){
 						if($or_index < 1){
-									$sql .= "sound = 1";
+								$sql_preposition .= "sound = 1";
 							}
 							else{
-									$sql .= " or sound = 1";
+								$sql_preposition .= " or sound = 1";
 							}
 					}
 					else if(str_starts_with($ortags[$or_index], '$video')){
 						if($or_index < 1){
-									$sql .= "video = 1";
+									$sql_preposition .= "video = 1";
 							}
 							else{
-									$sql .= " or video = 1";
+									$sql_preposition .= " or video = 1";
 							}
 					}
 					else if(str_starts_with($ortags[$or_index], '$rev')){
 						if($or_index < 1){
-									$sql .= "review = 1";
+									$sql_preposition .= "review = 1";
 							}
 							else{
-									$sql .= " or review = 1";
+									$sql_preposition .= " or review = 1";
 							}
-					}							
+					}
+					else if(str_starts_with($ortags[$or_index], '$tags=0')){
+						if($or_index < 1){
+									$sql_preposition .= "tag_list is null";
+							}
+							else{
+									$sql_preposition .= " or tag_list is null";
+							}
+					}
+					else if(str_starts_with($ortags[$or_index], '$tags=')){
+						if($or_index < 1){
+									$sql_preposition .= "(Length(tag_list) - Length(REPLACE(tag_list, ';', '')) - 1) = " . substr($ortags[$or_index],6);
+							}
+							else{
+									$sql_preposition .= " or (Length(tag_list) - Length(REPLACE(tag_list, ';', '')) - 1) = " . substr($ortags[$or_index],6);
+							}
+					}
+					else if(str_starts_with($ortags[$or_index], '$tags>')){
+						if($or_index < 1){
+									$sql_preposition .= "(Length(tag_list) - Length(REPLACE(tag_list, ';', '')) - 1) > " . substr($ortags[$or_index],6);
+							}
+							else{
+									$sql_preposition .= " or (Length(tag_list) - Length(REPLACE(tag_list, ';', '')) - 1) > " . substr($ortags[$or_index],6);
+							}
+					}
+					else if(str_starts_with($ortags[$or_index], '$tags<')){
+						if($or_index < 1){
+									$sql_preposition .= "(Length(tag_list) - Length(REPLACE(tag_list, ';', '')) - 1) < " . substr($ortags[$or_index],6);
+							}
+							else{
+									$sql_preposition .= " or (Length(tag_list) - Length(REPLACE(tag_list, ';', '')) - 1) < " . substr($ortags[$or_index],6);
+							}
+					}				
 					else{
 						if(str_starts_with($ortags[$or_index], '~')){
 							$sqla = $db->prepare("select tagid from tags where tag_name=:tag COLLATE NOCASE");
@@ -178,10 +232,10 @@ else
 							$searchtagid = $sqla->execute()->fetchArray()[0] ?? -1;	
 							
 							if($or_index < 1){
-										$sql .= "tag_list like '%;" . $searchtagid . ";%' or name like '%" . str_replace('\'', '_', substr($ortags[$or_index], 1)) . "%'";
+										$sql_preposition .= "tag_list like '%;" . $searchtagid . ";%' or name like '%" . str_replace('\'', '_', substr($ortags[$or_index], 1)) . "%'";
 								}
 								else{
-										$sql .= " or tag_list like '%;" . $searchtagid . ";%' or name like '%" . str_replace('\'', '_', substr($ortags[$or_index], 1)) . "%'";
+										$sql_preposition .= " or tag_list like '%;" . $searchtagid . ";%' or name like '%" . str_replace('\'', '_', substr($ortags[$or_index], 1)) . "%'";
 								}
 						}
 						else{
@@ -191,25 +245,25 @@ else
 							
 							if(!empty($searchtagid)){
 								if($or_index < 1){
-									$sql .= "tag_list like '%;" . $searchtagid . ";%'";
+									$sql_preposition .= "tag_list like '%;" . $searchtagid . ";%'";
 								}
 								else{
-									$sql .= " or tag_list like '%;" . $searchtagid . ";%'";
+									$sql_preposition .= " or tag_list like '%;" . $searchtagid . ";%'";
 								}								
 							}
 							else{
 								if($or_index < 1){
-									$sql .= "name like '%" . str_replace('\'', '_', $ortags[$or_index]) . "%'";
+									$sql_preposition .= "name like '%" . str_replace('\'', '_', $ortags[$or_index]) . "%'";
 								}
 								else{
-									$sql .= " or name like '%" . str_replace('\'', '_', $ortags[$or_index]) . "%'";
+									$sql_preposition .= " or name like '%" . str_replace('\'', '_', $ortags[$or_index]) . "%'";
 								}
 							}
 						}
 					}
 				}
 
-				$sql .= ")";
+				$sql_preposition .= ")";
 			}
 			else if(str_starts_with($searchtags[$tag_index], "!")){		
 				$sqla = $db->prepare("select tagid from tags where tag_name=:tag COLLATE NOCASE");
@@ -218,115 +272,147 @@ else
 
 				if(!empty($searchtagid)){
 					if($tag_index < 1){
-						$sql .= " tag_list not like '%;" . $searchtagid . ";%'";
+						$sql_preposition .= " tag_list not like '%;" . $searchtagid . ";%'";
 					}
 					else{
-						$sql .= " and tag_list not like '%;" . $searchtagid . ";%'";
+						$sql_preposition .= " and tag_list not like '%;" . $searchtagid . ";%'";
 					}
 				}
 				else{
 					if($tag_index < 1){
-						$sql .= " tag_list not like '%;%" . ";%'";
+						$sql_preposition .= " tag_list not like '%;%" . ";%'";
 					}
 					else{
-						$sql .= " and tag_list not like '%;%" . ";%'";
+						$sql_preposition .= " and tag_list not like '%;%" . ";%'";
 					}
 				}
 			}
 			else if(str_starts_with($searchtags[$tag_index], '$ext:')){
 				if($tag_index < 1){
-							$sql .= " ext ='" . substr($searchtags[$tag_index],5) . "'";
+							$sql_preposition .= " ext ='" . substr($searchtags[$tag_index],5) . "'";
 					}
 					else{
-							$sql .= " and ext ='" . substr($searchtags[$tag_index],5) . "'";
+							$sql_preposition .= " and ext ='" . substr($searchtags[$tag_index],5) . "'";
 					}
 			}
 			else if(str_starts_with($searchtags[$tag_index], '$dur>')){
 				if($tag_index < 1){
-							$sql .= " duration > " . substr($searchtags[$tag_index],5) . "";
+							$sql_preposition .= " duration > " . substr($searchtags[$tag_index],5) . "";
 					}
 					else{
-							$sql .= " and duration > " . substr($searchtags[$tag_index],5) . "";
+							$sql_preposition .= " and duration > " . substr($searchtags[$tag_index],5) . "";
 					}
 			}						
 			else if(str_starts_with($searchtags[$tag_index], '$dur<')){
 				if($tag_index < 1){
-							$sql .= " duration < " . substr($searchtags[$tag_index],5) . "";
+							$sql_preposition .= " duration < " . substr($searchtags[$tag_index],5) . "";
 					}
 					else{
-							$sql .= " and duration < " . substr($searchtags[$tag_index],5) . "";
+							$sql_preposition .= " and duration < " . substr($searchtags[$tag_index],5) . "";
 					}
 			}
 			else if(str_starts_with($searchtags[$tag_index], '$name:')){
 				if($tag_index < 1){
-							$sql .= " name like '%" . str_replace('\'', '_', substr($searchtags[$tag_index],6)) . "%'";
+							$sql_preposition .= " name like '%" . str_replace('\'', '_', substr($searchtags[$tag_index],6)) . "%'";
 					}
 					else{
-							$sql .= " and name like '%" . str_replace('\'', '_', substr($searchtags[$tag_index],6)) . "%'";
+							$sql_preposition .= " and name like '%" . str_replace('\'', '_', substr($searchtags[$tag_index],6)) . "%'";
 					}
 			}
 			else if(str_starts_with($searchtags[$tag_index], '$!name:')){
 				if($tag_index < 1){
-							$sql .= " name not like '%" . str_replace('\'', '_', substr($searchtags[$tag_index],7)) . "%'";
+							$sql_preposition .= " name not like '%" . str_replace('\'', '_', substr($searchtags[$tag_index],7)) . "%'";
 					}
 					else{
-							$sql .= " and name not like '%" . str_replace('\'', '_', substr($searchtags[$tag_index],7)) . "%'";
+							$sql_preposition .= " and name not like '%" . str_replace('\'', '_', substr($searchtags[$tag_index],7)) . "%'";
 					}
 			}
 			else if(str_starts_with($searchtags[$tag_index], '$rating>')){
 				if($tag_index < 1){
-							$sql .= " overall_rating > " . substr($searchtags[$tag_index],8) . "";
+							$sql_preposition .= " overall_rating > " . substr($searchtags[$tag_index],8) . "";
 					}
 					else{
-							$sql .= " and overall_rating > " . substr($searchtags[$tag_index],8) . "";
+							$sql_preposition .= " and overall_rating > " . substr($searchtags[$tag_index],8) . "";
 					}
 			}						
 			else if(str_starts_with($searchtags[$tag_index], '$rating<')){
 				if($tag_index < 1){
-							$sql .= " overall_rating < " . substr($searchtags[$tag_index],8) . "";
+							$sql_preposition .= " overall_rating < " . substr($searchtags[$tag_index],8) . "";
 					}
 					else{
-							$sql .= " and overall_rating < " . substr($searchtags[$tag_index],8) . "";
+							$sql_preposition .= " and overall_rating < " . substr($searchtags[$tag_index],8) . "";
 					}
 			}
 			else if(str_starts_with($searchtags[$tag_index], '$height>')){
 				if($tag_index < 1){
-							$sql .= " height > " . substr($searchtags[$tag_index],8) . "";
+							$sql_preposition .= " height > " . substr($searchtags[$tag_index],8) . "";
 					}
 					else{
-							$sql .= " and height > " . substr($searchtags[$tag_index],8) . "";
+							$sql_preposition .= " and height > " . substr($searchtags[$tag_index],8) . "";
 					}
 			}						
 			else if(str_starts_with($searchtags[$tag_index], '$height<')){
 				if($tag_index < 1){
-							$sql .= " height < " . substr($searchtags[$tag_index],8) . "";
+							$sql_preposition .= " height < " . substr($searchtags[$tag_index],8) . "";
 					}
 					else{
-							$sql .= " and height < " . substr($searchtags[$tag_index],8) . "";
+							$sql_preposition .= " and height < " . substr($searchtags[$tag_index],8) . "";
 					}
 			}
 			else if(str_starts_with($searchtags[$tag_index], '$sound')){
 				if($tag_index < 1){
-							$sql .= " sound = 1";
+							$sql_preposition .= " sound = 1";
 					}
 					else{
-							$sql .= " and sound = 1";
+							$sql_preposition .= " and sound = 1";
 					}
 			}
 			else if(str_starts_with($searchtags[$tag_index], '$video')){
 				if($tag_index < 1){
-							$sql .= " video = 1";
+							$sql_preposition .= " video = 1";
 					}
 					else{
-							$sql .= " and video = 1";
+							$sql_preposition .= " and video = 1";
 					}
 			}
 			else if(str_starts_with($searchtags[$tag_index], '$rev')){
 				if($tag_index < 1){
-							$sql .= " review = 1";
+							$sql_preposition .= " review = 1";
 					}
 					else{
-							$sql .= " and review = 1";
+							$sql_preposition .= " and review = 1";
+					}
+			}
+			else if(str_starts_with($searchtags[$tag_index], '$tags=0')){
+				if($tag_index < 1){
+							$sql_preposition .= "tag_list is null";
+					}
+					else{
+							$sql_preposition .= " and tag_list is null";
+					}
+			}
+			else if(str_starts_with($searchtags[$tag_index], '$tags=')){
+				if($tag_index < 1){
+							$sql_preposition .= "(Length(tag_list) - Length(REPLACE(tag_list, ';', '')) - 1) = " . substr($searchtags[$tag_index],6);
+					}
+					else{
+							$sql_preposition .= " and (Length(tag_list) - Length(REPLACE(tag_list, ';', '')) - 1) = " . substr($searchtags[$tag_index],6);
+					}
+			}
+			else if(str_starts_with($searchtags[$tag_index], '$tags>')){
+				if($tag_index < 1){
+							$sql_preposition .= "(Length(tag_list) - Length(REPLACE(tag_list, ';', '')) - 1) > " . substr($searchtags[$tag_index],6);
+					}
+					else{
+							$sql_preposition .= " and (Length(tag_list) - Length(REPLACE(tag_list, ';', '')) - 1) > " . substr($searchtags[$tag_index],6);
+					}
+			}
+			else if(str_starts_with($searchtags[$tag_index], '$tags<')){
+				if($tag_index < 1){
+							$sql_preposition .= "(Length(tag_list) - Length(REPLACE(tag_list, ';', '')) - 1) < " . substr($searchtags[$tag_index],6);
+					}
+					else{
+							$sql_preposition .= " and (Length(tag_list) - Length(REPLACE(tag_list, ';', '')) - 1) < " . substr($searchtags[$tag_index],6);
 					}
 			}
 			else{
@@ -336,10 +422,10 @@ else
 					$searchtagid = $sqla->execute()->fetchArray()[0] ?? -1;
 
 					if($tag_index < 1){
-								$sql .= "(tag_list like '%;" . $searchtagid . ";%' or name like '%" . str_replace('\'', '_', substr($searchtags[$tag_index], 1)) . "%')";
+								$sql_preposition .= "(tag_list like '%;" . $searchtagid . ";%' or name like '%" . str_replace('\'', '_', substr($searchtags[$tag_index], 1)) . "%')";
 						}
 						else{
-								$sql .= " and (tag_list like '%;" . $searchtagid . ";%' or name like '%" . str_replace('\'', '_', substr($searchtags[$tag_index], 1)) . "%')";
+								$sql_preposition .= " and (tag_list like '%;" . $searchtagid . ";%' or name like '%" . str_replace('\'', '_', substr($searchtags[$tag_index], 1)) . "%')";
 						}
 				}
 				else{
@@ -349,88 +435,102 @@ else
 
 					if(!empty($searchtagid)){
 						if($tag_index < 1){
-							$sql .= " tag_list like '%;" . $searchtagid . ";%'";
+							$sql_preposition .= " tag_list like '%;" . $searchtagid . ";%'";
 						}
 						else{
-							$sql .= " and tag_list like '%;" . $searchtagid . ";%'";
+							$sql_preposition .= " and tag_list like '%;" . $searchtagid . ";%'";
 						}								
 					}
 					else{
 						if($tag_index < 1){
-							$sql .= " name like '%" . str_replace('\'', '_', $searchtags[$tag_index]) . "%'";
+							$sql_preposition .= " name like '%" . str_replace('\'', '_', $searchtags[$tag_index]) . "%'";
 						}
 						else{
-							$sql .= " and name like '%" . str_replace('\'', '_', $searchtags[$tag_index]) . "%'";
+							$sql_preposition .= " and name like '%" . str_replace('\'', '_', $searchtags[$tag_index]) . "%'";
 						}
 					}
 				}
 			}						
 		}	
-		$sql .=  " order by ID desc";					
+		$sql1 .= $sql_preposition . " order by ID desc";	
+		$sql2 .= $sql_preposition . " order by ID desc limit " . strval($itemcount) . " offset " . strval($itemcount * ($page - 1));			
 		
-		echo "<!--" . $sql . "-->";
+		echo "<!--" . $sql1 . "-->";
+		echo "<!--" . $sql2 . "-->";
 		
-		$result = $db->query($sql);
+		$result = $db->query($sql1);
 		while ($row = $result->fetchArray()) {
-			array_push($rows, $row);
+			array_push($files, $row);
+		}
+
+		$result = $db->query($sql2);
+		while ($row = $result->fetchArray()) {
+			array_push($file_page_data, $row);
 		}
 		
-		$_SESSION["filtered_data"] = $rows;
+		$_SESSION["filtered_ids"] = $files;
 		$filtered = true;
 	}
 }
 
-$rownum = count($rows);
+$rownum = count($files);
 
 $r = rand(0, $rownum);
 
 $PageTitle = "Podobo - Posts [" . $rownum . "]";
+$list_view = true;
 	
-	function customPageHeader(){?>
-		<script>		
-			function ListView() {
-				var elements = document.getElementsByClassName("posts");
-				for (i = 0; i < elements.length; i++) {
-					elements[i].style.width = "100%";
-					elements[i].style.height = "151px";
-					//elements[i].classList.add("w3-center");
-				}
-
-				var nametext = document.getElementsByClassName("nametext");
-				while(nametext.length){
-					nametext[0].className = "nametext-list";
-				}
-
-				var vidandsoundmarker = document.getElementsByClassName(" vidandsoundmarker");
-				while( vidandsoundmarker.length){
-					vidandsoundmarker[0].className = " vidandsoundmarker-list";
-				}
-
-				var vidmarker = document.getElementsByClassName(" vidmarker");
-				while( vidmarker.length){
-					vidmarker[0].className = " vidmarker-list";
-				}
-
-				var nowrap = document.getElementsByClassName("nowrap");
-				while(nowrap.length) {
-					nowrap[0].classList.remove("nowrap");
-				}
+function customPageHeader(){?>
+	<script>		
+		function ListView() {
+			var elements = document.getElementsByClassName("posts");
+			for (i = 0; i < elements.length; i++) {
+				elements[i].style.width = "100%";
+				elements[i].style.height = "151px";
+				elements[i].style.margin = "20px 0px 14px 0px";
+				elements[i].classList.add("w3-center");
 			}
 
-			$(document).ready(function()
-			{				
-				var HeaderButton = document.getElementById("posts");
-				HeaderButton.className = "w3-bar-item w3-button w3-theme-l1";
-			});
-		</script>
-		<style type="text/css">
-			input[type=text] {
-			width: 240px;
+			var nametext = document.getElementsByClassName("nametext");
+			while(nametext.length){
+				nametext[0].className = "nametext-list";
 			}
-		</style>
-	<?php }
 
-	include_once('header.php');
+			var vidandsoundmarker = document.getElementsByClassName(" vidandsoundmarker");
+			while( vidandsoundmarker.length){
+				vidandsoundmarker[0].className = "vidandsoundmarker-list";
+			}
+
+			var vidmarker = document.getElementsByClassName(" vidmarker");
+			while( vidmarker.length){
+				vidmarker[0].className = "vidmarker-list";
+			}
+
+			var nowrap = document.getElementsByClassName("nowrap");
+			while(nowrap.length) {
+				nowrap[0].classList.remove("nowrap");
+			}
+
+			var postid = document.getElementsByClassName("postid");
+			while(postid.length) {
+				postid[0].className = "postid-list";
+			}
+		}
+
+		$(document).ready(function()
+		{				
+			var HeaderButton = document.getElementById("posts");
+			HeaderButton.className = "w3-bar-item w3-button w3-theme-l1";
+		});
+	</script>
+	<style type="text/css">
+		input[type=text] {
+		width: 230px;
+		}
+	</style>
+<?php }
+
+include_once('header.php');
 ?>
 					
 			<main class="row">
@@ -446,22 +546,14 @@ $PageTitle = "Podobo - Posts [" . $rownum . "]";
 			}
 			
 			$db = null;
-			//echo session_save_path();
-			
-			//echo "<form class='w3-center' autocomplete='off'>"; /* action='main.php?page='" . $page . "' method='get' */
-				//echo "<div id='searchbar' class='autocomplete' onkeyup='search_keypress'>";
-				//echo"<div>";
-				echo "<form class='tagadd' action='Posts.php' method='GET'>";
-					//echo "<input type='text' id='search' name='search' oninput='TagSuggestions(this.value)' value='".$search."' />";
-					echo "<input type='text' id='tag-input' oninput='TagSuggestions(this.value)' name='search' value='" . htmlspecialchars($search, ENT_QUOTES) . "'  data-multiple/>";
-					echo "<input type='submit' hidden />";
-				echo"</form>";
-				//echo "</div>";
-			//echo "</form>";
+			echo "<form class='tagadd' action='Posts.php' method='GET'>";
+				echo "<input type='text' id='tag-input' oninput='TagSuggestions(this.value)' name='search' value='" . htmlspecialchars($search, ENT_QUOTES) . "'  data-multiple/>";
+				echo "<input type='submit' hidden />";
+			echo"</form>";
 			
 			echo "<hr />";
-                        echo "</div>";
-                        echo "<div>";
+			echo "</div>";
+			echo "<div>";
                         
 			echo "<ul class='search-tag-list'>";
 			foreach($tags as $tag)
@@ -469,75 +561,83 @@ $PageTitle = "Podobo - Posts [" . $rownum . "]";
 				echo "<li>";
 				echo "<a href ='Posts.php?search=!" . $tag[0] = str_replace(" ", "_", $tag[0]) ."&page=" . $page . "'>! </a><a style='color:" . $TagColors[$tag[1]] . "' href ='Posts.php?search=" . $tag[0] = str_replace(" ", "_", $tag[0]) ."&page=" . $page . "'>" . $tag[0] . " - [" . $tag[2] . "]</a>";
 				echo "</li>";
-				//echo $i;
 			}
 			echo "</ul>";
 			echo "</div>";
-                        echo "</div>";
+			echo "</div>";
 			
-			echo "<div class='col-9'><div class='posts-wrapper'>";
-			
-			//$page = 1;			
+			echo "<div class='col-9'><div class='posts-wrapper'>";			
 			
 			$maxpage = ceil($rownum/($columncount*$rowcount));
 			$pagestart = ($page - 1) * ($columncount * $rowcount);
 			
-			for($i = $pagestart; $i<$pagestart+($rowcount*$columncount) and $i<$rownum; $i++)
+			//for($i = $pagestart; $i<$pagestart+($rowcount*$columncount) and $i<$rownum; $i++)
+			for($i = 0; $i<count($file_page_data); $i++)
 			{
-				if($i % 15 == 0){
+				if($i % $columncount == 0){
 					echo "<div class='row-posts'>";
 				}
-				if(strlen($rows[$i][5]) > 1) {$thumbclass = "class='thumbs-tagged'";} else  {$thumbclass = "class='thumbs-untagged'";} 
+				if(strlen($file_page_data[$i][4]) > 1) {$thumbclass = "class='thumbs tagged'";} else  {$thumbclass = "class='thumbs untagged'";} 
 				echo "<div class='posts'>";
-				echo "<a href ='Post.php?id=" . $rows[$i][0] . "'>";				
+				echo "<a href ='Post.php?id=" . $files[$pagestart + $i][0] . "'>";		
 				
-				echo "<img " . $thumbclass . " src ='" . $thumbs_source . pathinfo(rawurlencode($rows[$i][1]), PATHINFO_FILENAME) . ".jpg" . "' onerror='this.src =\"" . $thumbs_source . "MissingThumb.jpg\"" . "' alt='N/A'/></a><a href='Post.php?id=" . $rows[$i][0] . "'>" . $rows[$i][0] . "</a>";
-				echo "<div id='nametext' class='nametext'><p id='nowrap' class='nowrap'>" . $rows[$i][1] . "</p></div>";
-				if($rows[$i][3] == 1 && $rows[$i][4] == 1){
-					echo "<p class='vidandsoundmarker'>\u{25B6}\u{1F56A}</p>";
+				echo "<img " . $thumbclass . " src ='" . $thumbs_source . pathinfo(rawurlencode($file_page_data[$i][0]), PATHINFO_FILENAME) . ".jpg" . "' onerror='this.src =\"" . $thumbs_source . "MissingThumb.jpg\"" . "' alt='N/A'/></a>"; //<a href='Post.php?id=" . $files[$i][0] . "'>" . $files[$i][0] . "</a>
+				//echo "<div id='nametext' class='nametext'><p id='nowrap' class='nowrap'>" . $files[$i][1] . "</p></div>";
+				if($file_page_data[$i][2] == 1 && $file_page_data[$i][3] == 1){
+					echo "<div class='vidandsoundmarker'><i class='fas fa-play fa-2x'></i><i class='fas fa-volume-off fa-2x'></i></div>"; //<p>\u{25B6}\u{1F56A}</p>
 				}
-				else if($rows[$i][3] == 1 && $rows[$i][4] == 0){
-					echo "<p class='vidmarker'>\u{25B6}</p>";
+				else if($file_page_data[$i][2] == 1 && $file_page_data[$i][3] == 0){
+					echo "<div class='vidmarker'><i class='fas fa-play fa-2x'></i></div>"; //\u{25B6}
 				}
-				else if($rows[$i][3] == 0 && $rows[$i][4] == 1){
+				else if($file_page_data[$i][2] == 0 && $file_page_data[$i][3] == 1){
 					echo "<p class='vidmarker'>\u{1F56A}</p>";
 				}
 				echo "</div>";
 
-				if($i % 15 == 14){
+				if($i % $columncount == ($columncount - 1) || $i == count($files) - 1){
 					echo "</div>";
 				}
 			}
 			
 			echo "</div>";
 			
-			echo "<div class='container_footer' align='center'>";
+			echo "<div class='container_footer'>";
 			
 			
 			$pagelimit = 5;
-			if($page < $pagelimit) { $start_page = 1; } else { $start_page = $page - ($maxpage < $pagelimit ? $maxpage + 1 : $pagelimit - 1);}
+			if($page < $pagelimit + 1) { $start_page = 1; } else { $start_page = $page - ($maxpage < $pagelimit ? $maxpage + 1 : $pagelimit);}
 			if($page > $maxpage - $pagelimit) { $end_page = $maxpage; } else { $end_page = $page + ($maxpage < $pagelimit ? $maxpage : $pagelimit); }
 			
 			if($page != 1) 
 			{
-				echo "<a href='Posts.php?page=1&search=" . $search . "'>&lt;&lt;</a>";
-				echo "<a href='Posts.php?page=".($page - 1)."&search=" . $search . "'>&lt;</a>";	
+				echo "<a href='Posts.php?page=1&search=" . $search . "'><i class='fas fa-angles-left fa-2x'></i></a>";
+				echo "<a href='Posts.php?page=".($page - 1)."&search=" . $search . "'><i class='fas fa-angle-left fa-2x'></i></a>";	
 			}
 			
 			for($k = $start_page; $k <= $end_page; $k++)
 			{
-				echo "<a href='Posts.php?page=".$k."&search=" . $search . "'>";
-				if($k==$page) { echo "<strong> ".$k." </strong>"; } else { echo $k;}
-				echo "</a>";
+				if($k == $page){
+					echo "<a class='current-page' href='Posts.php?page=".$k."&search=" . $search . "'>";
+					echo $k;
+					echo "</a>";
+				}
+				else{
+					echo "<a class='other-page' href='Posts.php?page=".$k."&search=" . $search . "'>";
+					echo $k;
+					echo "</a>";
+				}
+				
 			}
 			
 			if($page != $maxpage) 
 			{
-				echo "<a href='Posts.php?page=".($page + 1)."&search=" . $search . "'>&gt;</a>";
-				echo "<a href='Posts.php?page=".$maxpage."&search=" . $search . "'>&gt;&gt;</a>";
+				echo "<a href='Posts.php?page=".($page + 1)."&search=" . $search . "'><i class='fas fa-angle-right fa-2x'></i></a>";
+				echo "<a href='Posts.php?page=".$maxpage."&search=" . $search . "'><i class='fas fa-angles-right fa-2x'></i></a>";
 			}
 			
-			echo "</div></div></main>";
+			echo "</div>";
+			echo "</div>";
+			echo "</main>";
 			
 		?>
 		<script type="text/javascript">

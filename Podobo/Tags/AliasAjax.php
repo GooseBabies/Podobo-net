@@ -1,5 +1,6 @@
 <?php
 	$db = new SQLite3("C:\\Users\\Chris\\AppData\\Roaming\\Paiz\\Database\\nevada.db");
+	$db->busyTimeout(100);
 	
 	if(isset($_GET["txt"])) { $txt = html_entity_decode($_GET["txt"]); } else { $txt = ""; };
 	$rows = [];
@@ -24,7 +25,7 @@
 		array_push($outrows, str_replace(" ", "_", $parenttag));		
 	}
 	
-	echo json_encode($outrows);			
+	echo json_encode($outrows);		
 	
 	$db = null;
 ?>

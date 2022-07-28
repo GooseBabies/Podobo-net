@@ -1,256 +1,277 @@
 <?php
 	session_start();
-	//$TagOrder=array(14,4,0,1,2,8,6,7,9,10,12,13,11,16,5,15);
-	//$TagCategoryTitle=array("General", "IP/Series", "Individual", "Artist", "Studio/Network", "Sex", "Afilliation/Group", "Race/Species/Ethnicity", "Body Part", "Clothing/Accessory", "Position", "Setting", "Action", "Meta", "Title", "Release Date");
 
 	$db = new SQLite3("C:\\Users\\Chris\\AppData\\Roaming\\Paiz\\Database\\nevada.db");	
-
+	$db->busyTimeout(100);
 	$files = [];
-	if(isset($_SESSION["filtered_data"]) && count($_SESSION["filtered_data"]) > 0){
-		$files = $_SESSION["filtered_data"];
+
+	try{
+		$files = [];
+	if(isset($_SESSION["filtered_ids"]) && count($_SESSION["filtered_ids"]) > 0){
+		$files = $_SESSION["filtered_ids"];
 		$idcount = count($files)-1;
 		$filtered = true;
-		//echo "<!--true-->";
 	}
 	else{
-		if(isset($_SESSION["image_data"])){
-			$files = $_SESSION["image_data"];				
+		if(isset($_SESSION["all_ids"])){
+			$files = $_SESSION["all_ids"];				
 			$filtered = false;
-			//echo "<!--false-->";
 		}
 		else{		
-			$result = $db->query("SELECT ID, name, overall_rating, video, sound, tag_list FROM files order by id desc");				
+			$result = $db->query("SELECT ID FROM files order by id desc");				
 			while ($row = $result->fetchArray()) {
 				array_push($files, $row);
-			}
-			$_SESSION["image_data"] = $files;
+			}			
+			$_SESSION["all_ids"] = $files;
 			$filtered = false;
-			//echo "<!--false";
-			//echo count($_SESSION["image_data"]) . "-->";
 		}
+		$_SESSION["search"] = "";
 		$idcount = count($files)-1;
 	}
-
-	$r = rand(0, $idcount);
 	
-	$postp = $db->query("select * from booru_proc where processed = 0 order by random() limit 1")->fetchArray() ?? '';	
-	$postpcount = $db->query("select distinct count(*) from booru_proc where processed = 0")->fetchArray()[0] ?? '';
+		$r = rand(0, $idcount);
+		
+		$postp = $db->query("select * from booru_proc where processed = 0 order by random() limit 1")->fetchArray() ?? '';	
+		$overallcount = $db->query("select count(*) from booru_proc where processed = 0")->fetchArray()[0] ?? '';
 	
-	$sql = $db->prepare("select * from tags where tag_name = :tag COLLATE NOCASE");
-	$sql->bindValue(":tag", str_replace("_", " ", $postp[2]), SQLITE3_TEXT);
-	$tag_item = $sql->execute()->fetchArray() ?? '';
-	if($tag_item != ''){
-		$tag = str_replace(" ", "_", $tag_item[1]);
-	}
-	else{
-		$tag = "";
-	}
-	
-
-	//if tag is a alias get preferred
-	if($tag != ""){
-		$sql = $db->prepare("select preferred from siblings where alias = :alias");
-		$sql->bindValue(":alias", $tag_item[0], SQLITE3_INTEGER);
-		$preferred = $sql->execute()->fetchArray()[0] ?? -1;
-		if($preferred > 0)
-		{		
-			$sql = $db->prepare("select tag_name from tags where tagid= :preferred ");
-			$sql->bindValue(":preferred", $preferred, SQLITE3_INTEGER);
-			$tag = $sql->execute()->fetchArray()[0] ?? '';
-			$tag = str_replace(" ", "_", $tag);
+		$sql = $db->prepare("select count(*) from booru_proc where booru_tag = :bt and booru_source = :bs");
+		$sql->bindValue(":bt", $postp[2], SQLITE3_TEXT);
+		$sql->bindValue(":bs", $postp[4], SQLITE3_INTEGER);
+		$tagcount = $sql->execute()->fetchArray()[0] ?? '';
+		
+		$sql = $db->prepare("select * from tags where tag_name = :tag COLLATE NOCASE");
+		$sql->bindValue(":tag", str_replace("_", " ", $postp[2]), SQLITE3_TEXT);
+		$tag_item = $sql->execute()->fetchArray() ?? '';
+		if($tag_item != ''){
+			$tag = str_replace(" ", "_", $tag_item[1]);
 		}
-	}
-
-	$PageTitle = "Podobo - " . $postp[2];
-
-	function customPageHeader(){?>
-		<script>
-			$(document).ready(function()
-			{				
-				var HeaderButton = document.getElementById("tools");
-				HeaderButton.className = "w3-bar-item w3-button w3-theme-l1";
-			});
-		</script>
-		<style type="text/css">
-		#siblings-indicator {
-            color: gray;
-			margin-left: 5px;
-			margin-right: 5px;
+		else{
+			$tag = "";
 		}
-		</style>
-	<?php }
-
-	include_once('header.php');
-
-	$db = null;
-			echo "<!-- Tag: " . $tag . " -->";
-			
-			echo "<hr />";
+		
+	
+		//if tag is a alias get preferred
+		if($tag != ""){
+			$sql = $db->prepare("select preferred from siblings where alias = :alias");
+			$sql->bindValue(":alias", $tag_item[0], SQLITE3_INTEGER);
+			$preferred = $sql->execute()->fetchArray()[0] ?? -1;
+			if($preferred > 0)
+			{		
+				$sql = $db->prepare("select tag_name from tags where tagid= :preferred ");
+				$sql->bindValue(":preferred", $preferred, SQLITE3_INTEGER);
+				$tag = $sql->execute()->fetchArray()[0] ?? '';
+				$tag = str_replace(" ", "_", $tag);
+			}
+		}
+	
+		$PageTitle = "Podobo - " . $postp[2];
+	
+		function customPageHeader(){?>
+			<script>
+				$(document).ready(function()
+				{				
+					var HeaderButton = document.getElementById("tools");
+					HeaderButton.className = "w3-bar-item w3-button w3-theme-l1";
+				});
+			</script>
+			<style type="text/css">
+			#siblings-indicator {
+				color: gray;
+				margin-left: 5px;
+				margin-right: 5px;
+			}
+			</style>
+		<?php }
+	
+		include_once('header.php');
+	
+		$db = null;
+		echo "<!-- Tag: " . $tag . " -->";
+		
+		echo "<hr />";
+		
+		echo "<div class='w3-center'>";
+		echo "<p>" . $overallcount . " Tags Left - " . GetBooruSource($postp[4]) . "</p>";
+		if($postp[4] == 6){
+			if(is_null($postp[3])){
+				echo "<p>Namespace: None (" . $tagcount . ")</p>";
+			}
+			else if($postp[3] == ""){
+				echo "<p>Namespace: General (" . $tagcount . ")</p>";
+			}
+			else{
+				echo "<p>Namespace: " . $postp[3] . " (" . $tagcount . ")</p>";
+			}
+		}
+		else{
+			echo "<p>Namespace: None (" . $tagcount . ")</p>";
+		}
+			//echo "<form autocomplete='off'>\r\n";
+				echo '<input type="text" name="query" value="' . $postp[2] . '" />';
+				//echo "<input type='submit' hidden />\r\n";
+			//echo "</form>\r\n";
 			
 			echo "<div class='w3-center'>";
-			echo "<p>" . $postpcount . " Tags Left - " . GetBooruSource($postp[3]) . "</p>";
-				//echo "<form autocomplete='off'>\r\n";
-					echo "<input type='text' name='query' value=" . json_encode($postp[2], JSON_UNESCAPED_UNICODE) . " />";
-					//echo "<input type='submit' hidden />\r\n";
-				//echo "</form>\r\n";
-				
-				echo "<div class='w3-center'>";
-					echo "<a href='" . "https://rule34.xxx/index.php?page=post&s=list&tags=" . $postp[2] . "' target='_blank'>" . $postp[2] . " (rule34.xxx)</a>";
-				echo "</div>";
-
-				echo "<div class='w3-center'>";
-					echo "<p> - </p>";
-					echo "<a href='" . "https://e621.net/posts?tags=" . $postp[2] . "' target='_blank'>" . $postp[2] . " (e621)</a>";
-				echo "</div>";
-
-				echo "<div class='w3-center'>";
-					echo "<p> - </p>";
-					echo "<a href='" . "https://danbooru.donmai.us/posts?tags=" . $postp[2] . "' target='_blank'>" . $postp[2] . " (Danbooru)</a>";
-				echo "</div>";
+				echo "<a href='" . "https://rule34.xxx/index.php?page=post&s=list&tags=" . $postp[2] . "' target='_blank'>" . $postp[2] . " (rule34.xxx)</a>";
 			echo "</div>";
-			
-			echo "<hr />";
-			
-			//podobo tag
+
+			echo "<div class='w3-center'>";
+				echo "<p> - </p>";
+				echo "<a href='" . "https://e621.net/posts?tags=" . $postp[2] . "' target='_blank'>" . $postp[2] . " (e621)</a>";
+			echo "</div>";
+
+			echo "<div class='w3-center'>";
+				echo "<p> - </p>";
+				echo "<a href='" . "https://danbooru.donmai.us/posts?tags=" . $postp[2] . "' target='_blank'>" . $postp[2] . " (Danbooru)</a>";
+			echo "</div>";
+		echo "</div>";
+		
+		echo "<hr />";
+		
+		//podobo tag
+		echo "<div>";
+			echo "<div class='w3-center'>";
+				echo "<label>Tag:</label>";
+			echo "</div>";
+			echo "<div class='w3-center'>";
+				echo "<input type='text' id='tag-input' oninput='TagSuggestions(this.value, 0)' />";		
+				//echo "<input type='submit' hidden />";
+			echo "</div>";
+			echo "<div class='w3-center'>";
+				echo "<select name='categories' id='category'>";
+					echo "<option value='0'>General</option>";
+					echo "<option value='1'>IP</option>";
+					echo "<option value='2'>Individual</option>";
+					echo "<option value='3'>Rating</option>";
+					echo "<option value='4'>Artist</option>";
+					echo "<option value='5'>Studio</option>";
+					echo "<option value='6'>Sex</option>";
+					echo "<option value='7'>Afilliation</option>";
+					echo "<option value='8'>Race</option>";
+					echo "<option value='9'>Body Part</option>";
+					echo "<option value='10'>Clothing</option>";
+					echo "<option value='11'>Position</option>";
+					echo "<option value='12'>Setting</option>";
+					echo "<option value='13'>Action</option>";
+					echo "<option value='14'>Meta</option>";
+					echo "<option value='15'>Title</option>";
+					echo "<option value='16'>Date</option>";
+				echo "</select>";
+			echo "</div>";
+		echo "</div>";
+		
+		echo "<hr />";
+		
+		//parent tag
+		echo "<div id='parentdiv' class='w3-center'>\r\n";
 			echo "<div>";
-				echo "<div class='w3-center'>";
-					echo "<label>Tag:</label>";
-				echo "</div>";
-				echo "<div class='w3-center'>";
-					echo "<input type='text' id='tag-input' oninput='TagSuggestions(this.value, 0)' />";		
-					//echo "<input type='submit' hidden />";
-				echo "</div>";
-				echo "<div class='w3-center'>";
-					echo "<select name='categories' id='category'>";
-						echo "<option value='0'>General</option>";
-						echo "<option value='1'>IP</option>";
-						echo "<option value='2'>Individual</option>";
-						echo "<option value='4'>Artist</option>";
-						echo "<option value='5'>Studio</option>";
-						echo "<option value='6'>Sex</option>";
-						echo "<option value='7'>Afilliation</option>";
-						echo "<option value='8'>Race</option>";
-						echo "<option value='9'>Body Part</option>";
-						echo "<option value='10'>Clothing</option>";
-						echo "<option value='11'>Position</option>";
-						echo "<option value='12'>Setting</option>";
-						echo "<option value='13'>Action</option>";
-						echo "<option value='14'>Meta</option>";
-						echo "<option value='15'>Title</option>";
-						echo "<option value='16'>Date</option>";
-					echo "</select>";
-				echo "</div>";
+				echo "<label>Parent:</label>";
 			echo "</div>";
-			
-			echo "<hr />";
-			
-			//parent tag
-			echo "<div id='parentdiv' class='w3-center'>\r\n";
-				echo "<div>";
-					echo "<label>Parent:</label>";
-				echo "</div>";
-				echo "<div>";
-					echo "<input type='text' id='parent0' oninput='TagSuggestions(this.value, 1)' />";
-				echo "</div>";
-				echo "<div>";
-					echo "<label>Parent:</label>";
-				echo "</div>";
-				echo "<div>";
-					echo "<input type='text' id='parent1' oninput='TagSuggestions(this.value, 2)' />";
-				echo "</div>";
-				echo "<div>";
-					echo "<label>Parent:</label>";
-				echo "</div>";
-				echo "<div>";
-					echo "<input type='text' id='parent2' oninput='TagSuggestions(this.value, 3)' />";
-				echo "</div>";
-			echo "</div>\r\n";
-			
-			echo "<hr />";
-			
-			//sibling tag
-			echo "<div id='siblingdiv' class='w3-center'>";
-				echo "<div>";
-					echo "<i id='siblings-indicator' class='fa-solid fa-circle'></i>";
-					echo "<label>Alias Siblings:</label>";					
-				echo "</div>";
-				echo "<div>";
-					echo "<textarea id='sibling' rows='6' cols='40' oninput='AddedSiblings()'></textarea>";					
-				echo "</div>";
-				//echo "<div></div>";
+			echo "<div>";
+				echo "<input type='text' id='parent0' oninput='TagSuggestions(this.value, 1)' />";
 			echo "</div>";
-			
-			echo "<hr />";
-			
-			echo "<div class='w3-center'>";
-				echo "<input class='w3-center' id='submitbutton' type='button' value='Submit' onclick='SubmitTags()'/>\r\n";
-				echo "<input class='w3-center' type='button' value='Ignore' onclick='IgnoreTags()'/>";		
+			echo "<div>";
+				echo "<label>Parent:</label>";
 			echo "</div>";
-			
-			echo "<div id='response' class='w3-center'>";
-			
+			echo "<div>";
+				echo "<input type='text' id='parent1' oninput='TagSuggestions(this.value, 2)' />";
 			echo "</div>";
-			
-			function GetBooruLink($booru_source)
-			{
-				switch($booru_source)
-				{
-					case 0:
-						return "https://danbooru.donmai.us/posts?tags=";
-						break;
-					case 1:
-						return "https://e621.net/posts?tags=";
-						break;
-					case 2:
-						return "https://rule34.xxx/index.php?page=post&s=list&tags=";
-						break;
-					case 3:
-						return "https://gelbooru.com/index.php?page=post&s=list&tags=";
-						break;
-					case 4:
-						return "https://realbooru.com/index.php?page=post&s=list&tags=";
-						break;
-					case 5:
-						return "https://chan.sankakucomplex.com/wiki/show?title=";
-						break;
-					default:
-						return "https://www.google.com/search?q=";
-						break;
-				}
-			}
-			
-			function GetBooruSource($booru_source)
-			{
-				switch($booru_source)
-				{
-					case 0:
-						return "(Danbooru)";
-						break;
-					case 1:
-						return "(e621)";
-						break;
-					case 2:
-						return "(rule34.xxx)";
-						break;
-					case 3:
-						return "(gelbooru)";
-						break;
-					case 4:
-						return "(realbooru)";
-						break;
-					case 5:
-						return "(Sankaku Complex)";
-						break;
-					case 6:
-						return "(Hydrus PTR)";
-						break;
-					default:
-						return "(google)";
-						break;
-				}
-			}
-			
-		?>
+			echo "<div>";
+				echo "<label>Parent:</label>";
+			echo "</div>";
+			echo "<div>";
+				echo "<input type='text' id='parent2' oninput='TagSuggestions(this.value, 3)' />";
+			echo "</div>";
+		echo "</div>\r\n";
+		
+		echo "<hr />";
+		
+		//sibling tag
+		echo "<div id='siblingdiv' class='w3-center'>";
+			echo "<div>";
+				echo "<i id='siblings-indicator' class='fa-solid fa-circle'></i>";
+				echo "<label>Alias Siblings:</label>";					
+			echo "</div>";
+			echo "<div>";
+				echo "<textarea id='sibling' rows='6' cols='40' oninput='AddedSiblings()'></textarea>";					
+			echo "</div>";
+			//echo "<div></div>";
+		echo "</div>";
+		
+		echo "<hr />";
+		
+		echo "<div class='w3-center'>";
+			echo "<input class='w3-center' id='submitbutton' type='button' value='Submit' onclick='SubmitTags()'/>\r\n";
+			echo "<input class='w3-center' type='button' value='Clear' onclick='ClearTags()'/>";
+			echo "<input class='w3-center' id='ignorebutton' type='button' value='Ignore' onclick='IgnoreTags()'/>";		
+		echo "</div>";
+		
+		echo "<div id='response' class='w3-center'>";
+		
+		echo "</div>";
+	}catch(exception $e){
+
+	}
+	
+	function GetBooruLink($booru_source)
+	{
+		switch($booru_source)
+		{
+			case 0:
+				return "https://danbooru.donmai.us/posts?tags=";
+				break;
+			case 1:
+				return "https://e621.net/posts?tags=";
+				break;
+			case 2:
+				return "https://rule34.xxx/index.php?page=post&s=list&tags=";
+				break;
+			case 3:
+				return "https://gelbooru.com/index.php?page=post&s=list&tags=";
+				break;
+			case 4:
+				return "https://realbooru.com/index.php?page=post&s=list&tags=";
+				break;
+			case 5:
+				return "https://chan.sankakucomplex.com/wiki/show?title=";
+				break;
+			default:
+				return "https://www.google.com/search?q=";
+				break;
+		}
+	}
+	
+	function GetBooruSource($booru_source)
+	{
+		switch($booru_source)
+		{
+			case 0:
+				return "(Danbooru)";
+				break;
+			case 1:
+				return "(e621)";
+				break;
+			case 2:
+				return "(rule34.xxx)";
+				break;
+			case 3:
+				return "(gelbooru)";
+				break;
+			case 4:
+				return "(realbooru)";
+				break;
+			case 5:
+				return "(Sankaku Complex)";
+				break;
+			case 6:
+				return "(Hydrus PTR)";
+				break;
+			default:
+				return "(google)";
+				break;
+		}
+	}	
+?>
 	</body>
 	<script type="text/javascript">
 		var awesomplete;
@@ -268,9 +289,14 @@
 		var providedparents = false;
 		var providedsiblings = false;
 		var bt = <?php echo json_encode($postp[2], JSON_UNESCAPED_UNICODE); ?>;
-		var bs = <?php echo $postp[3]; ?>;
+		var bs = <?php echo $postp[4]; ?>;
 		var submit;
+		var ignore;
 		var resdiv;
+		var siblingcount = 0;
+		var parent0_exists = false;
+		var parent1_exists = false;
+		var parent2_exists = false;
 		$(document).ready(function()
 		{
 			input = document.getElementById("tag-input");
@@ -303,6 +329,7 @@
 			category = document.getElementById("category");
 			category.value = 0;
 			submit = document.getElementById("submitbutton");
+			ignore = document.getElementById("ignorebutton");
 			
 			resdiv = document.getElementById("response");
 			sib_ind = document.getElementById("siblings-indicator");
@@ -367,7 +394,9 @@
 					{							
 						for (let i = 0; i < 3 && i < response.length; i++)
 						{							
-							eval("parent" + i + ".value = response[" + i + "];");							
+							eval("parent" + i + ".value = response[" + i + "];");
+							eval("parent" + i + "_exists = true;");		
+							eval("parent" + i + ".disabled = true;");				
 						}
 						providedparents = true;						
 					}
@@ -401,6 +430,7 @@
 							}
 										
 						}
+						siblingcount = response.length;
 						providedsiblings = true;						
 					}
 				},
@@ -435,7 +465,7 @@
 			sibling.value = sibling.value.replace(/ $/g, "_");
 
 			$.ajax({
-				url: 'Tags/CheckSiblingsAjax.php?siblings=' + sibling.value.split('\n').join('+'),
+				url: 'Tags/CheckSiblingsAjax.php?siblings=' + sibling.value.split('\n').slice(siblingcount).join('+'),
 				type: 'get',
 				dataType: 'JSON',
 				success: function(response){
@@ -450,6 +480,7 @@
 				error: function(xhr, ajaxOptions, thrownError)
 				{
 					console.log(xhr.responseText);
+					
 				}
 			});
 		}
@@ -460,7 +491,18 @@
 			var tag = input.value;
 			if(!providedparents)
 			{
-				var parents = "&parents=" + (parent0.value == "" ? "" : parent0.value) + (parent1.value == "" ? "" : "+" + parent1.value) + (parent2.value == "" ? "" : "+" + parent2.value);
+				var parents = "&parents="
+				if(parent0.value != "" && !parent0_exists){
+					parents += encodeURIComponent(parent0.value);
+				}
+
+				if(parent1.value != "" && !parent1_exists){
+					parents += "+" + encodeURIComponent(parent1.value);
+				}
+
+				if(parent2.value != "" && !parent2_exists){
+					parents += "+" + encodeURIComponent(parent2.value);
+				}
 			}
 			else
 			{
@@ -471,7 +513,11 @@
 			{
 				if(sibling.value != "")
 				{
-					var siblings = "&siblings=" + sibling.value.split('\n').join('+');
+					var sibs = sibling.value.split('\n').slice(siblingcount);
+					for (let i = 0; i < sibs.length; i++) {
+						sibs[i] = encodeURIComponent(sibs[i]);
+					}
+					var siblings = "&siblings=" + sibs.join('+');
 				}
 				else
 				{
@@ -483,7 +529,6 @@
 				var siblings = "";
 			}
 			cat = category.value;
-			//console.log(cat);
 			
 			$.ajax({
 				url: 'Tags/BooruAddTagAjax.php?tag=' + encodeURIComponent(tag) + parents + siblings + '&bt=' + encodeURIComponent(bt) + '&bs=' + bs + '&cat=' + cat,
@@ -497,7 +542,11 @@
 						{
 							if(i==0)
 							{
-								resdiv.innerHTML += "<div><a href='Tags/Tag.php?tagid=" + response[i] + "' target='_blank'>Tag Page</a><p>-</p></div>";	
+								if(response.includes("Error")){
+									resdiv.innerHTML += "<div><p style='color:red;'>" + response[i] + "</p></div>";
+								}else{
+									resdiv.innerHTML += "<div><a href='Tags/Tag.php?tagid=" + response[i] + "' target='_blank'>Tag Page</a><p>-</p></div>";	
+								}
 							}
 							else{
 								resdiv.innerHTML += "<div><a href='Post.php?id=" + response[i] + "' target='_blank'>" + response[i] + "</a></div>";	
@@ -510,7 +559,8 @@
 				{
 					//console.log(url);
 					console.log(xhr.responseText);
-					resdiv.innerHTML += "<div><p style='color:red;'>Error</p></div>";
+					console.log(thrownError);
+					resdiv.innerHTML += "<div><p style='color:red;'>Ajax Error</p></div>";
 				}
 			});
 		}
@@ -521,9 +571,7 @@
 				url: 'Tags/IgnoreBooruAjax.php?bt=' + encodeURIComponent(bt) + '&bs=' + bs,
 				type: 'get',
 				//dataType: 'JSON',
-				success: function(response){
-					//just a small updated post
-					console.log(response);
+				success: function(response){					
 					resdiv.innerHTML += "<hr />";
 					resdiv.innerHTML += "<div><p>Tag Processing Ignored</p></div>";
 				},
@@ -533,6 +581,24 @@
 					resdiv.innerHTML += "<div><p style='color:red;'>Error</p></div>";
 				}
 			});
+			ignore.value = "Ignored!";
+		}
+
+		function ClearTags()
+		{
+			input.value = "";
+			parent0.value = "";
+			parent0.disabled = false;
+			parent0_exists = false;
+			parent1.value = "";
+			parent1.disabled = false;
+			parent1_exists = false;
+			parent2.value = "";
+			parent2.disabled = false;
+			parent2_exists = false;
+			sibling.value = "";
+			category.value = 0;
+			siblungcount = 0;
 		}
 		
 	</script>

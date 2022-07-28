@@ -2,31 +2,34 @@
 	// Start the session
 	session_start();
 
-	$db = new SQLite3("C:\\Users\\Chris\\AppData\\Roaming\\Paiz\\Database\\nevada.db");		
-		$files = [];
-		if(isset($_SESSION["filtered_data"]) && count($_SESSION["filtered_data"]) > 0){
-			$files = $_SESSION["filtered_data"];
-			$idcount = count($files)-1;
-			$filtered = true;
+	$db = new SQLite3("C:\\Users\\Chris\\AppData\\Roaming\\Paiz\\Database\\nevada.db");	
+	$db->busyTimeout(100);	
+	
+	$files = [];
+	if(isset($_SESSION["filtered_ids"]) && count($_SESSION["filtered_ids"]) > 0){
+		$files = $_SESSION["filtered_ids"];
+		$idcount = count($files)-1;
+		$filtered = true;
+	}
+	else{
+		if(isset($_SESSION["all_ids"])){
+			$files = $_SESSION["all_ids"];				
+			$filtered = false;
 		}
-		else{
-			if(isset($_SESSION["image_data"])){
-				$files = $_SESSION["image_data"];				
-				$filtered = false;
-			}
-			else{		
-				$result = $db->query("SELECT ID, name, overall_rating, video, sound, tag_list FROM files order by id desc");				
-				while ($row = $result->fetchArray()) {
-					array_push($files, $row);
-				}
-				$_SESSION["image_data"] = $files;
-				$filtered = false;
-			}
-			$idcount = count($files)-1;
+		else{		
+			$result = $db->query("SELECT ID FROM files order by id desc");				
+			while ($row = $result->fetchArray()) {
+				array_push($files, $row);
+			}			
+			$_SESSION["all_ids"] = $files;
+			$filtered = false;
 		}
-		
-		$db = null;
-		$r = rand(0,$idcount);
+		$_SESSION["search"] = "";
+		$idcount = count($files)-1;
+	}
+	
+	$db = null;
+	$r = rand(0,$idcount);
 
 	$PageTitle = "Slideshow";
 	
@@ -89,6 +92,9 @@
 	
 		function myfunction(){
 			clearInterval(nIntervId);
+			if(index > filearray.length - 1){
+				index = 0;
+			}
 			getimage(filearray[index][0]);
 			index++;
 		}
