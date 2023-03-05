@@ -1,7 +1,9 @@
 <?php
 	session_start();
 
-	$db = new SQLite3("C:\\Users\\Chris\\AppData\\Roaming\\Paiz\\Database\\nevada.db");	
+	//$db = new SQLite3("C:\\Users\\Chris\\AppData\\Roaming\\Paiz\\Database\\nevada.db");	
+	//$db = new SQLite3("Y:\\Database\\nevada.db");
+	$db = new SQLite3("D:\\Piaz\\Database\\nevada.db");
 	$db->busyTimeout(100);
 	$files = [];
 
@@ -47,6 +49,10 @@
 			
 		echo "<div class='w3-center'>";
 			echo "<input class='w3-center' id='IQDB-Command' type='button' value='IQDB Command' onclick='IQDBCommand()'/>\r\n";	
+
+			echo "<hr />";
+
+			echo "<input class='w3-center' id='Closing-Command' type='button' value='Closing Command' onclick='ClosingCommand()'/>\r\n";	
 		echo "</div>";
 	}catch(exception $e){
 
@@ -57,6 +63,7 @@
 		$(document).ready(function()
 		{			
 			iqdb_command = document.getElementById("IQDB-Command");
+			closing_command = document.getElementById("Closing-Command");
 		});		
 				
 		function IQDBCommand()
@@ -71,6 +78,22 @@
 				error: function(xhr, ajaxOptions, thrownError)
 				{
 					iqdb_command.value = "Error";
+				}
+			});
+		}
+
+		function ClosingCommand()
+		{
+			$.ajax({
+				url: 'ClosingCommandAjax.php',
+				type: 'get',
+				//dataType: 'JSON',
+				success: function(response){					
+					closing_command.value = "Commanded";
+				},
+				error: function(xhr, ajaxOptions, thrownError)
+				{
+					closing_command.value = "Error";
 				}
 			});
 		}

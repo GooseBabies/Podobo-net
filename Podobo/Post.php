@@ -5,7 +5,9 @@
 	$TagOrder=array(13,3,0,15,1,2,7,5,6,8,9,11,12,10,16,4,14);
 	$TagCategoryTitle=array("General", "IP/Series", "Individual", "Rating", "Artist", "Studio/Network", "Sex", "Afilliation/Group", "Race/Species/Ethnicity", "Body Part", "Clothing/Accessory", "Position", "Setting", "Action", "Meta", "Title", "Release Date");
 	
-	$db = new SQLite3("C:\\Users\\Chris\\AppData\\Roaming\\Paiz\\Database\\nevada.db");		
+	//$db = new SQLite3("C:\\Users\\Chris\\AppData\\Roaming\\Paiz\\Database\\nevada.db");	
+	//$db = new SQLite3("Y:\\Database\\nevada.db");	
+	$db = new SQLite3("D:\\Piaz\\Database\\nevada.db");
 	
 	if(isset($_GET["id"])) { $id = $_GET["id"]; } else { $id = 1; };
 
@@ -110,6 +112,11 @@
 					}
 				}
 
+				if(jQuery.browser.mobile == true){
+					var main_left = document.getElementById("main-left");
+					main_left.className = "main-left-edit";
+				}
+
 				var destry = document.getElementsByTagName("del");
 				while (destry.length > 0) {
 					destry[0].remove();
@@ -141,7 +148,7 @@
 	include_once('header.php');
 ?>
             <main class="row">
-                <div class="col-2 w3-theme main-left">
+                <div id="main-left" class="col-2 w3-theme main-left">
 		
 			<?php
 			
@@ -265,7 +272,7 @@
 
 			echo "<hr />";
 			
-			echo "<div class='tagarea' >";
+			echo "<div class='tagarea'>";
 			echo "<div id='tagarea'>";
 			echo "<dl>";
 			foreach($tags as $tag)
@@ -314,6 +321,8 @@
 				for($i = 0; $i <= count($filename_contents) - 1; $i++){
 					echo "<p onclick='copyText(this.innerHTML)'>" . trim($filename_contents[$i]) . "</p>";
 				}
+				echo "<!--" . json_encode($filename) ."-->";
+				echo "<input type='Button' value='Process Filename' onclick='ProcessFilename(" . json_encode($filename, JSON_HEX_APOS) . ")' />";				
 			}
 			else{
 				echo "<p>" . basename($file_link) . "</p>";
@@ -852,6 +861,71 @@
 					console.log(xhr.responseText);
 				}
 			});
+		}
+
+		function ProcessFilename(data_full){
+			//console.log(data_full);
+			data = data_full.split(/(\]|\[| \- |\(|\)|\,| x )/)
+			//console.log(data);
+			for (let i = 0; i < data.length; i++) {
+				data[i] = data[i].trim();
+				//console.log(data[i]);
+				if(data[i] == "" || data[i] == "[" || data[i] == "]" || data[i] == " - " || data[i] == "(" || data[i] == ")" || data[i] == "-" || data[i] == ".mp4" || data[i] == ","){
+					//do nothing
+				}
+				else{
+					//console.log(encodeURIComponent(data[i]));
+					$.ajax({
+						url: 'Tags/CheckTagExistsAjax.php?tag=' + encodeURIComponent(data[i].replace(" ", "_")),
+						type: 'get',
+						dataType: 'JSON',
+						async: false,
+						timeout: 200,
+						success: function(response){
+							//console.log("exists response" + response);
+							if(response == 1){		
+								$.ajax({
+									url: 'Tags/PreferredAjax.php?txt=' + encodeURIComponent(data[i].replace(" ", "_")),
+									type: 'get',
+									dataType: 'JSON',
+									async: false,
+									timeout: 200,
+									success: function(response){
+										if(response != ""){
+											data[i] = response[0];
+										}
+										//console.log(response);
+									},
+									error: function(xhr, ajaxOptions, thrownError)
+									{
+										console.log(xhr.responseText);													
+									}
+								});	
+
+								$.ajax({
+									url: 'ImgTagAddAjax.php?tag=' + encodeURIComponent(data[i].replace(" ", "_")) + '&id=' + id + '&cat=0',
+									type: 'get',
+									dataType: 'JSON',
+									async: false,
+									timeout: 200,
+									success: function(response){
+										//console.log(response);																	
+									},
+									error: function(xhr, ajaxOptions, thrownError)
+									{
+										console.log("Tag Add Error");
+									}
+								});
+							}
+						},
+						error: function(xhr, ajaxOptions, thrownError)
+						{
+							console.log(xhr.responseText);							
+						}
+					});
+				}
+			}
+			GetNewTags();
 		}
 	</script>		
 	</body>

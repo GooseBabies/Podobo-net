@@ -2,7 +2,9 @@
 	session_start();
     $ignored = [];
 
-	$db = new SQLite3("C:\\Users\\Chris\\AppData\\Roaming\\Paiz\\Database\\nevada.db");	
+	//$db = new SQLite3("C:\\Users\\Chris\\AppData\\Roaming\\Paiz\\Database\\nevada.db");	
+	//$db = new SQLite3("Y:\\Database\\nevada.db");
+	$db = new SQLite3("D:\\Piaz\\Database\\nevada.db");
 
 	$files = [];
 	if(isset($_SESSION["filtered_ids"]) && count($_SESSION["filtered_ids"]) > 0){

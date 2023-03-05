@@ -3,7 +3,10 @@
     $TagOrder=array(13,3,0,15,1,2,7,5,6,8,9,11,12,10,16,4,14);
     $TagCategoryTitle=array("General", "IP/Series", "Individual", "Rating", "Artist", "Studio/Network", "Sex", "Afilliation/Group", "Race/Species/Ethnicity", "Body Part", "Clothing/Accessory", "Position", "Setting", "Action", "Meta", "Title", "Release Date");
 
-	$db = new SQLite3("C:\\Users\\Chris\\AppData\\Roaming\\Paiz\\Database\\nevada.db");
+	//$db = new SQLite3("C:\\Users\\Chris\\AppData\\Roaming\\Paiz\\Database\\nevada.db");
+    //$db = new SQLite3("Y:\\Database\\nevada.db");
+    $db = new SQLite3("D:\\Piaz\\Database\\nevada.db");
+    $db->exec('PRAGMA foreign_keys = ON;');
     $db->busyTimeout(100);
 	
 	if(isset($_GET["id"])) { $id = $_GET["id"]; } else { $id = -1; }; 

@@ -1,9 +1,12 @@
 <?php
-	$db = new SQLite3("C:\\Users\\Chris\\AppData\\Roaming\\Paiz\\Database\\nevada.db");
+	//$db = new SQLite3("C:\\Users\\Chris\\AppData\\Roaming\\Paiz\\Database\\nevada.db");
+    //$db = new SQLite3("Y:\\Database\\nevada.db");
+    $db = new SQLite3("D:\\Piaz\\Database\\nevada.db");
+    $db->exec('PRAGMA foreign_keys = ON;');
     $db->busyTimeout(100);
 	
 	if(isset($_GET["tagid"])) { $tagid = $_GET["tagid"]; } else { $tagid = -1; };
-    if(isset($_GET["newtag"])) { $newtag = $_GET["newtag"]; } else { $newtag = ""; };
+    if(isset($_GET["newtag"])) { $newtag = html_entity_decode($_GET["newtag"]); } else { $newtag = ""; };
     if(isset($_GET["cat"])) { $category = $_GET["cat"]; } else { $category = 0; };
 	$output = "";
     $hashes = [];
@@ -28,7 +31,7 @@
 
         //Update Tag
 
-        $sql = $db->prepare("select tagid from tags where tag_name = :tag;");
+        $sql = $db->prepare("select tagid from tags where tag_name = :tag");
         $sql->bindValue(':tag', str_replace("_", " ", $newtag), SQLITE3_TEXT);
         $newtagid = $sql->execute()->fetchArray()[0] ?? -1;
 

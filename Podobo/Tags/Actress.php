@@ -4,7 +4,9 @@
 	//$TagCategoryTitle=array("General", "IP/Series", "Individual", "", "Artist", "Studio/Network", "Sex", "Afilliation/Group", "Race/Species/Ethnicity", "Body Part", "Clothing/Accessory", "Position", "Setting", "Action", "Meta", "Title", "Release Date");
     $actresses = [];
 
-	$db = new SQLite3("C:\\Users\\Chris\\AppData\\Roaming\\Paiz\\Database\\nevada.db");	
+	//$db = new SQLite3("C:\\Users\\Chris\\AppData\\Roaming\\Paiz\\Database\\nevada.db");	
+	//$db = new SQLite3("Y:\\Database\\nevada.db");
+	$db = new SQLite3("D:\\Piaz\\Database\\nevada.db");
 	$db->busyTimeout(100);
 
 	$files = [];

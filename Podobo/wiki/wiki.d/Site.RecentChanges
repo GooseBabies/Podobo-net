@@ -1,9 +1,0 @@
-version=pmwiki-2.3.3 ordered=1 urlencoded=1
-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:100.0) Gecko/20100101 Firefox/100.0
-charset=UTF-8
-ctime=1653670967
-host=127.0.0.1
-name=Site.RecentChanges
-rev=1
-text=* [[Site/SideBar]]  . . . @2022-05-27T17:02:47Z by ?: [==]%0a
-time=1653670967

@@ -13,7 +13,10 @@
 	$tagmap = [];
 	$tagids = [];
 
-	$db = new SQLite3("C:\\Users\\Chris\\AppData\\Roaming\\Paiz\\Database\\nevada.db");	
+	//$db = new SQLite3("C:\\Users\\Chris\\AppData\\Roaming\\Paiz\\Database\\nevada.db");	
+	//$db = new SQLite3("Y:\\Database\\nevada.db");
+	$db = new SQLite3("D:\\Piaz\\Database\\nevada.db");
+	$db->exec('PRAGMA foreign_keys = ON;');
 
     if(isset($_GET["tagid"])) { $tagid = $_GET["tagid"]; } else { $tagid = 1; };
 
@@ -135,7 +138,7 @@
 
 	//tag Map
 
-    $sql = $db->prepare("select booru_tag, booru_source from tag_map where tagid = :tagid");
+    $sql = $db->prepare("select booru_tag, booru_source, namespace from tag_map where tagid = :tagid");
     $sql->bindValue(':tagid', $tagid, SQLITE3_INTEGER);
 	$result = $sql->execute();
 	while ($row = $result->fetchArray()) {
@@ -296,7 +299,7 @@
 			for($k = $start_page; $k <= $end_page; $k++)
 			{
 				if($k == $index){
-					echo "<a class='current-page' href='Tag.php?tgaid=".$tagids[$k][0]."'>";
+					echo "<a class='current-page' href='Tag.php?tagid=".$tagids[$k][0]."'>";
 					echo ($tagids[$k][0]);
 					echo "</a>";
 				}
@@ -323,6 +326,7 @@
                 echo "<p>Tag ID - " . $tagid . "</p>";
                 echo "<p>Tag - <a href ='../Posts.php?page=1&search=" . rawurlencode(str_replace(" ", "_", $tag[0])) . "'>" . $tag[0] . " (" . $tag[2] . ")</a></p>";
                 echo "<p>Category - <a href ='TagList.php?page=1&cat=" . $tag[1] . "'>" . $TagCategoryTitle[$tag[1]] . "</a></p>";
+				echo "<p><a href='../wiki/index.php?key=" . rawurlencode(str_replace(" ", "_", $tag[0])) . "'>Wiki</a></p>";
 			echo "</div>";
 
 			echo "<hr />";
@@ -504,20 +508,22 @@
                 echo "<p><strong>Tag Map</strong> (These Booru Tags are Aliased to " . $tag[0] . ")</p><p>-</p>";
 
                 foreach($tagmap as $tagg){
-                    echo "<div id='" . $tagg[0] . "'>";
-                    echo "<p>ID: <a href='" . GetBooruLink($tagg[1]) . $tagg[0] . "'> " . $tagg[0] . " " . GetBooruSource($tagg[1]) . "</a>";
-					echo "<input type='Button' value='x' onclick='RemoveTagMap(" . json_encode($tagg[0]) . ", " . $tagid . ", " . $tagg[1] . ")' />";
+                    echo "<div id='" . json_encode($tagg[0], JSON_UNESCAPED_UNICODE) . "'>";
+                    echo "<p>ID: <a href='" . GetBooruLink($tagg[1]) . $tagg[0] . "'> " . ($tagg[2] == "" ? "" : $tagg[2] . ": ") . $tagg[0] . " " . GetBooruSource($tagg[1]) . "</a>";
+					echo "<input type='Button' value='x' onclick='RemoveTagMap(" . json_encode(rawurlencode($tagg[0])) . ", " . $tagid . ", " . $tagg[1] . ", " . ($tagg[2] == "" ? json_encode("") : json_encode($tagg[2])) . ")' />";
                     echo "</p></div>";
                 }
 				
 			    echo "</div>\r\n";
             }
 
-			echo "<div id='response' class='w3-center'>";
-
 			echo "<hr />";
+
+			echo "<div id='response' class='w3-center'>";			
 					
 			echo "</div>";
+
+			echo "<input id='delete-tag' type='button' value='Delete Tag' onclick='DeleteTag(" . $tagid . ")' />";
 			
 			function GetBooruLink($booru_source)
 			{
@@ -540,6 +546,9 @@
 						break;
 					case 5:
 						return "https://chan.sankakucomplex.com/wiki/show?title=";
+						break;
+					case 6:
+						return "../HydrusImages.php?tag=";
 						break;
 					default:
 						return "https://www.google.com/search?q=";
@@ -582,7 +591,8 @@
 	<script type="text/javascript">
 		var edit_input;
 		var paren_input;
-		
+		var tag = <?php echo json_encode($tag[0]); ?>;
+
 		$(document).ready(function()
 		{
 			edit_input = document.getElementById("edit-input");
@@ -619,6 +629,8 @@
 			alias_awesomplete = new Awesomplete(alias_input, { sort: false } );
 
 			alias_submit = document.getElementById("submit-alias");
+
+			delete_tag = document.getElementById("delete-tag");
 			
 			resdiv = document.getElementById("response");
 		});
@@ -722,7 +734,7 @@
 			cat = edit_category.value;
 			
 			$.ajax({
-				url: 'EditTagAjax.php?tagid=' + tagid + '&newtag=' + edittag + '&cat=' + cat,
+				url: 'EditTagAjax.php?tagid=' + tagid + '&newtag=' + encodeURIComponent(edittag) + '&cat=' + cat,
 				type: 'get',
 				dataType: 'JSON',
 				success: function(response){
@@ -941,10 +953,10 @@
 			});
 		}
 
-		function RemoveTagMap(boorutag, tagid, bs)
+		function RemoveTagMap(boorutag, tagid, bs, namespace)
 		{
 			$.ajax({
-				url: 'RemoveTagMapAjax.php?boorutag=' + boorutag + '&tagid=' + tagid + '&bs=' + bs,
+				url: 'RemoveTagMapAjax.php?boorutag=' + encodeURIComponent(boorutag) + '&tagid=' + tagid + '&bs=' + bs + '&namespace=' + namespace,
 				type: 'get',
 				dataType: 'JSON',
 				success: function(response){
@@ -975,11 +987,13 @@
 				dataType: 'JSON',
 				success: function(response){
 					if(response.length > 0)
-					{							
+					{			
+						//console.log(response);				
 						if(response == "Error"){
 							console.log("Error with Remove Sibling");
 						}	
 						else{
+							console.log(response);
 							resdiv.innerHTML += "<div><p>" + response + "</p></div>";	
 						}				
 					}
@@ -989,6 +1003,32 @@
 					console.log(xhr.responseText);
 				}
 			});
+		}
+
+		function DeleteTag(tagid){
+			if (confirm("Delete tag?") == true) {
+					delete_tag.value = "Deleted!"					
+					
+					$.ajax({
+						url: 'DeleteTagAjax.php?tagid=' + tagid,
+						type: 'get',
+						dataType: 'JSON',
+						success: function(response){
+							if(response.length > 0)
+							{	
+								resdiv.innerHTML += "<div><p>" + response + "</p></div>";						
+							}
+						},
+						error: function(xhr, ajaxOptions, thrownError)
+						{
+							//console.log(url);
+							console.log(xhr.responseText);
+							resdiv.innerHTML += "<div><p style='color:red;'>Error</p></div>";
+						}
+					});
+				} else {
+					resdiv.innerHTML += "<div><p style='color:red;'>Cancelled Delete Tag</p></div>"
+				}
 		}
 		
 	</script>

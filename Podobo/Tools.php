@@ -1,7 +1,9 @@
 <?php
 	session_start();
 	
-	$db = new SQLite3("C:\\Users\\Chris\\AppData\\Roaming\\Paiz\\Database\\nevada.db");
+	//$db = new SQLite3("C:\\Users\\Chris\\AppData\\Roaming\\Paiz\\Database\\nevada.db");
+	//$db = new SQLite3("Y:\\Database\\nevada.db");
+	$db = new SQLite3("D:\\Piaz\\Database\\nevada.db");
 	$db->busyTimeout(100);
 
 	$files = [];
@@ -46,6 +48,13 @@
 	include_once('header.php');
 
 ?>
+
+<a id="booru-tag" class="w3-bar-item w3-button w3-theme-l1" href="<?= isset($InTags) ? "../" : ""?>BooruTag.php">Booru Tag</a>
+<a id="ignored-tags" class="w3-bar-item w3-button w3-theme-l1" href="<?= isset($InTags) ? "" : "Tags/"?>IgnoredTagList.php">Ignored Tag List</a>
+<a id="dupes" class="w3-bar-item w3-button w3-theme-l1" href="<?= isset($InTags) ? "../" : ""?>Dupes.php">Dupes</a>
+<a id="command" class="w3-bar-item w3-button w3-theme-l1" href="<?= isset($InTags) ? "../" : ""?>Command.php">Command</a>
+<a id="slideshow" class="w3-bar-item w3-button w3-theme-l1" href="<?= isset($InTags) ? "../" : ""?>Slideshow.php">Slideshow</a>
+<a id="hydrus" class="w3-bar-item w3-button w3-theme-l1" href="https://67.253.187.197:45869/">Hydrus</a>
 
 </body>
 </html>

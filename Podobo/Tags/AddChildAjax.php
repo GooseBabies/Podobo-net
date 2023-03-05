@@ -1,5 +1,8 @@
 <?php
-	$db = new SQLite3("C:\\Users\\Chris\\AppData\\Roaming\\Paiz\\Database\\nevada.db");
+	//$db = new SQLite3("C:\\Users\\Chris\\AppData\\Roaming\\Paiz\\Database\\nevada.db");
+    //$db = new SQLite3("Y:\\Database\\nevada.db");
+    $db = new SQLite3("D:\\Piaz\\Database\\nevada.db");
+    $db->exec('PRAGMA foreign_keys = ON;');
     $db->busyTimeout(100);
 	
 	if(isset($_GET["tagid"])) { $tagid = $_GET["tagid"]; } else { $tagid = -1; };
@@ -9,7 +12,7 @@
     try{
         if($child != "" and $child != " ") 
         {
-            $sql = $db->prepare("select tagid from tags where tag_name = :child");
+            $sql = $db->prepare("select tagid from tags where tag_name = :child COLLATE NOCASE");
             $sql->bindValue(':child', str_replace("_", " ", $child) , SQLITE3_TEXT);
             $childid = $sql->execute()->fetchArray()[0] ?? -1;
 

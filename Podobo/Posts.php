@@ -10,7 +10,9 @@ $files = [];
 $file_page_data = [];
 $tags = [];
 
-$db = new SQLite3("C:\\Users\\Chris\\AppData\\Roaming\\Paiz\\Database\\nevada.db");
+//$db = new SQLite3("C:\\Users\\Chris\\AppData\\Roaming\\Paiz\\Database\\nevada.db");
+//$db = new SQLite3("Y:\\Database\\nevada.db");
+$db = new SQLite3("D:\\Piaz\\Database\\nevada.db");
 
 if(isset($_GET["search"])) { $search = html_entity_decode($_GET["search"]); } else { $search = ""; }
 if(isset($_GET["page"])) { $page = $_GET["page"]; } else { $page = 1; }
@@ -19,7 +21,7 @@ if(isset($_SESSION["all_ids"]) and $search == "")
 	$sql = $db->prepare("SELECT name, overall_rating, video, sound, tag_list FROM files order by ID desc limit :limit offset :offset");
 	$sql->bindValue(':limit', $itemcount, SQLITE3_INTEGER);
 	$sql->bindValue(':offset', $itemcount * ($page - 1), SQLITE3_INTEGER);
-	echo "<!--" . $sql->getSQL() . "-->";
+	//echo "<!--" . $sql->getSQL() . "-->";
 	$result = $sql->execute();
 	while ($row = $result->fetchArray()) {
 		array_push($file_page_data, $row);
@@ -56,6 +58,7 @@ else
 	}
 	else
 	{	
+		unset($_SESSION["filtered_ids"]);
 		$_SESSION["search"] = $search;
 		// echo $search;
 		$searchtags = array_filter(explode(" ", $search));
@@ -193,12 +196,12 @@ else
 									$sql_preposition .= " or review = 1";
 							}
 					}
-					else if(str_starts_with($ortags[$or_index], '$tags=0')){
+					else if(str_starts_with($ortags[$or_index], '$tags=0') or str_starts_with($ortags[$or_index], '!$tagged')){
 						if($or_index < 1){
-									$sql_preposition .= "tag_list is null";
+									$sql_preposition .= "tag_list is null or tag_list = ';' or tag_list = ''";
 							}
 							else{
-									$sql_preposition .= " or tag_list is null";
+									$sql_preposition .= " or tag_list is null or tag_list = ';' or tag_list = ''";
 							}
 					}
 					else if(str_starts_with($ortags[$or_index], '$tags=')){
@@ -383,17 +386,17 @@ else
 							$sql_preposition .= " and review = 1";
 					}
 			}
-			else if(str_starts_with($searchtags[$tag_index], '$tags=0')){
+			else if(str_starts_with($searchtags[$tag_index], '$tags=0') or str_starts_with($searchtags[$tag_index], '!tagged')){
 				if($tag_index < 1){
-							$sql_preposition .= "tag_list is null";
+							$sql_preposition .= " tag_list is null or tag_list = ';' or tag_list = ''";
 					}
 					else{
-							$sql_preposition .= " and tag_list is null";
+							$sql_preposition .= " and tag_list is null or tag_list = ';' or tag_list = ''";
 					}
 			}
 			else if(str_starts_with($searchtags[$tag_index], '$tags=')){
 				if($tag_index < 1){
-							$sql_preposition .= "(Length(tag_list) - Length(REPLACE(tag_list, ';', '')) - 1) = " . substr($searchtags[$tag_index],6);
+							$sql_preposition .= " (Length(tag_list) - Length(REPLACE(tag_list, ';', '')) - 1) = " . substr($searchtags[$tag_index],6);
 					}
 					else{
 							$sql_preposition .= " and (Length(tag_list) - Length(REPLACE(tag_list, ';', '')) - 1) = " . substr($searchtags[$tag_index],6);
@@ -401,7 +404,7 @@ else
 			}
 			else if(str_starts_with($searchtags[$tag_index], '$tags>')){
 				if($tag_index < 1){
-							$sql_preposition .= "(Length(tag_list) - Length(REPLACE(tag_list, ';', '')) - 1) > " . substr($searchtags[$tag_index],6);
+							$sql_preposition .= " (Length(tag_list) - Length(REPLACE(tag_list, ';', '')) - 1) > " . substr($searchtags[$tag_index],6);
 					}
 					else{
 							$sql_preposition .= " and (Length(tag_list) - Length(REPLACE(tag_list, ';', '')) - 1) > " . substr($searchtags[$tag_index],6);
@@ -409,7 +412,7 @@ else
 			}
 			else if(str_starts_with($searchtags[$tag_index], '$tags<')){
 				if($tag_index < 1){
-							$sql_preposition .= "(Length(tag_list) - Length(REPLACE(tag_list, ';', '')) - 1) < " . substr($searchtags[$tag_index],6);
+							$sql_preposition .= " (Length(tag_list) - Length(REPLACE(tag_list, ';', '')) - 1) < " . substr($searchtags[$tag_index],6);
 					}
 					else{
 							$sql_preposition .= " and (Length(tag_list) - Length(REPLACE(tag_list, ';', '')) - 1) < " . substr($searchtags[$tag_index],6);
@@ -574,11 +577,12 @@ include_once('header.php');
 			//for($i = $pagestart; $i<$pagestart+($rowcount*$columncount) and $i<$rownum; $i++)
 			for($i = 0; $i<count($file_page_data); $i++)
 			{
-				if($i % $columncount == 0){
-					echo "<div class='row-posts'>";
-				}
+				// if($i % $columncount == 0){
+				// 	echo "<div class='row-posts'>";
+				// }
 				if(strlen($file_page_data[$i][4]) > 1) {$thumbclass = "class='thumbs tagged'";} else  {$thumbclass = "class='thumbs untagged'";} 
-				echo "<div class='posts'>";
+				echo "<article class='post-article'>";
+				echo "<div class='post-preview'>";
 				echo "<a href ='Post.php?id=" . $files[$pagestart + $i][0] . "'>";		
 				
 				echo "<img " . $thumbclass . " src ='" . $thumbs_source . pathinfo(rawurlencode($file_page_data[$i][0]), PATHINFO_FILENAME) . ".jpg" . "' onerror='this.src =\"" . $thumbs_source . "MissingThumb.jpg\"" . "' alt='N/A'/></a>"; //<a href='Post.php?id=" . $files[$i][0] . "'>" . $files[$i][0] . "</a>
@@ -593,10 +597,11 @@ include_once('header.php');
 					echo "<p class='vidmarker'>\u{1F56A}</p>";
 				}
 				echo "</div>";
+				echo "</article>";
 
-				if($i % $columncount == ($columncount - 1) || $i == count($files) - 1){
-					echo "</div>";
-				}
+				// if($i % $columncount == ($columncount - 1) || $i == count($files) - 1){
+				// 	echo "</div>";
+				// }
 			}
 			
 			echo "</div>";

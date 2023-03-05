@@ -9,7 +9,9 @@
     $username = $password = "";
     $username_err = $password_err = $login_err = "";
 
-	$db = new SQLite3("C:\\Users\\Chris\\AppData\\Roaming\\Paiz\\Database\\nevada.db");	
+	//$db = new SQLite3("C:\\Users\\Chris\\AppData\\Roaming\\Paiz\\Database\\nevada.db");	
+    //$db = new SQLite3("Y:\\Database\\nevada.db");
+    $db = new SQLite3("D:\\Piaz\\Database\\nevada.db");
     $db->busyTimeout(100);
 
     if($_SERVER["REQUEST_METHOD"] == "POST"){
@@ -39,6 +41,7 @@
                 
                 // Redirect user to welcome page
                 header("location: index.php");
+                exit();
             } else{
                 // Password is not valid, display a generic error message
                 $login_err = "Invalid username or password.";

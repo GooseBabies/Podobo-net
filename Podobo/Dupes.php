@@ -1,7 +1,9 @@
 <?php
 	session_start();
 	
-	$db = new SQLite3("C:\\Users\\Chris\\AppData\\Roaming\\Paiz\\Database\\nevada.db");	
+	//$db = new SQLite3("C:\\Users\\Chris\\AppData\\Roaming\\Paiz\\Database\\nevada.db");	
+	//$db = new SQLite3("Y:\\Database\\nevada.db");
+	$db = new SQLite3("D:\\Piaz\\Database\\nevada.db");
 	$db->busyTimeout(100);
 	$files = [];
 	if(isset($_SESSION["filtered_ids"]) && count($_SESSION["filtered_ids"]) > 0){
@@ -47,7 +49,7 @@
 	$sql->bindValue(":hash", $hash2, SQLITE3_TEXT);
 	$file2 = $sql->execute()->fetchArray();	
 
-	$PageTitle = "Podobo - Dupes";
+	$PageTitle = "Podobo - Dupes [" . $dupecount . "]";
 
 	function customPageHeader(){?>
 		<script>

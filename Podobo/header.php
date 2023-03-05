@@ -12,7 +12,9 @@
 		}
 	}
 
-	$db = new SQLite3("C:\\Users\\Chris\\AppData\\Roaming\\Paiz\\Database\\nevada.db");
+	//$db = new SQLite3("C:\\Users\\Chris\\AppData\\Roaming\\Paiz\\Database\\nevada.db");
+	//$db = new SQLite3("Y:\\Database\\nevada.db");
+	$db = new SQLite3("D:\\Piaz\\Database\\nevada.db");
 	$db->busyTimeout(100);
 
 	$sql = "SELECT message_id FROM status where id=1";
@@ -36,14 +38,14 @@
 			$progress = "";
 			break;
 		case 3:
-			$message = "Importing new Images";
+			$message = "Importing new";
 			$state = 3;
 			$sql = "SELECT import_progress FROM status where id=1";
 			$result = $db->query($sql);
 			$progress = " - " . $result->fetchArray()[0] ?? '';
 			break;
 		case 4:
-			$message = "IQDB in Progress";
+			$message = "IQDB";
 			$state = 2;
 			$sql = "SELECT iqdb_progress FROM status where id=1";
 			$result = $db->query($sql);
@@ -51,7 +53,7 @@
 			$progress = " - " . $iqdb . " / 300";
 			break;
 		case 5:
-			$message = "Processing Dupes";
+			$message = "Dupes";
 			$state = 3;
 			$sql = "SELECT dupes_progress FROM status where id=1";
 			$result = $db->query($sql);
@@ -66,14 +68,14 @@
 			$progress = " - " . $auto_booru . " / 300";
 			break;
 		case 7:
-			$message = "Retro Parents Work";
+			$message = "Retro Parents";
 			$state = 3;
 			$sql = "SELECT closing_progress FROM status where id=1";
 			$result = $db->query($sql);
 			$progress = " - " . $result->fetchArray()[0] ?? '';
 			break;
 		case 8:
-			$message = "Retro Siblings Work";
+			$message = "Retro Siblings";
 			$state = 3;
 			$sql = "SELECT closing_progress FROM status where id=1";
 			$result = $db->query($sql);
@@ -87,49 +89,49 @@
 			$progress = " - " . $result->fetchArray()[0] ?? '';
 			break;
 		case 10:
-			$message = "Removing Broken Tags";
+			$message = "Broken Tags";
 			$state = 3;
 			$sql = "SELECT closing_progress FROM status where id=1";
 			$result = $db->query($sql);
 			$progress = " - " . $result->fetchArray()[0] ?? '';
 			break;
 		case 11:
-			$message = "Removing Duplicate Sources";
+			$message = "Duped Sources";
 			$state = 3;
 			$sql = "SELECT closing_progress FROM status where id=1";
 			$result = $db->query($sql);
 			$progress = " - " . $result->fetchArray()[0] ?? '';
 			break;
 		case 12:
-			$message = "Calculating Missing P-hashes";
+			$message = "Missing P-hashes";
 			$state = 3;
 			$sql = "SELECT closing_progress FROM status where id=1";
 			$result = $db->query($sql);
 			$progress = " - " . $result->fetchArray()[0] ?? '';
 			break;
 		case 13:
-			$message = "Checking for Deleted Files";
+			$message = "Deleted Files";
 			$state = 3;
 			$sql = "SELECT closing_progress FROM status where id=1";
 			$result = $db->query($sql);
 			$progress = " - " . $result->fetchArray()[0] ?? '';
 			break;
 		case 14:
-			$message = "Recalculating Tag Counts";
+			$message = "Tag Counts";
 			$state = 3;
 			$sql = "SELECT closing_progress FROM status where id=1";
 			$result = $db->query($sql);
 			$progress = " - " . $result->fetchArray()[0] ?? '';
 			break;
 		case 15:
-			$message = "Removing Broken Siblings";
+			$message = "Broken Siblings";
 			$state = 3;
 			$sql = "SELECT closing_progress FROM status where id=1";
 			$result = $db->query($sql);
 			$progress = " - " . $result->fetchArray()[0] ?? '';
 			break;
 		case 16:
-			$message = "Removing Broken Parents";
+			$message = "Broken Parents";
 			$state = 3;
 			$sql = "SELECT closing_progress FROM status where id=1";
 			$result = $db->query($sql);
@@ -143,21 +145,21 @@
 			$progress = " - " . $result->fetchArray()[0] ?? '';
 			break;
 		case 18:
-			$message = "Backing Up Database";
+			$message = "DB Backup";
 			$state = 3;
 			$sql = "SELECT closing_progress FROM status where id=1";
 			$result = $db->query($sql);
 			$progress = " - " . $result->fetchArray()[0] ?? '';
 			break;
 		case 19:
-			$message = "Rotating Images CW";
+			$message = "Rotate CW";
 			$state = 3;
 			$sql = "SELECT closing_progress FROM status where id=1";
 			$result = $db->query($sql);
 			$progress = " - " . $result->fetchArray()[0] ?? '';
 			break;
 		case 19:
-			$message = "Rotating Images CCW";
+			$message = "Rotate CCW";
 			$state = 3;
 			$sql = "SELECT closing_progress FROM status where id=1";
 			$result = $db->query($sql);
@@ -194,43 +196,6 @@
         <?php if (function_exists('customPageHeader')){
             customPageHeader();
         }?>
-        <script>
-            function Posts_Enter() {
-                document.getElementById("recent").style.display = "block";
-                document.getElementById("random").style.display = "block";
-                document.getElementById("oldest").style.display = "block";
-                document.getElementById("videos").style.display = "block";
-                document.getElementById("studio-videos").style.display = "block";
-                document.getElementById("booru-tag").style.display = "none";
-                document.getElementById("ignored-tags").style.display = "none";
-                document.getElementById("dupes").style.display = "none";
-				document.getElementById("command").style.display = "block"; 
-            }
-
-            function General_Enter() {
-                document.getElementById("recent").style.display = "none";
-                document.getElementById("random").style.display = "block";
-                document.getElementById("oldest").style.display = "none";
-                document.getElementById("videos").style.display = "none";
-                document.getElementById("studio-videos").style.display = "block";
-                document.getElementById("booru-tag").style.display = "block";
-                document.getElementById("ignored-tags").style.display = "none";
-                document.getElementById("dupes").style.display = "block";
-				document.getElementById("command").style.display = "block"; 
-            }
-
-            function Tools_Enter() {
-                document.getElementById("recent").style.display = "none";
-                document.getElementById("random").style.display = "none";
-                document.getElementById("oldest").style.display = "none";
-                document.getElementById("videos").style.display = "none";
-                document.getElementById("studio-videos").style.display = "none";
-                document.getElementById("booru-tag").style.display = "block";
-                document.getElementById("ignored-tags").style.display = "block";
-                document.getElementById("dupes").style.display = "block";     
-				document.getElementById("command").style.display = "block";            
-            }			
-        </script>
         <style type="text/css">
 		#state-indicator {
             <?php
@@ -254,26 +219,19 @@
 	</head>
 	<body>
             <div class="w3-bar w3-theme w3-left-align w3-medium container_header">
-                <a id="posts" class="w3-bar-item w3-button w3-hide-small w3-hover-blue-grey" onmouseenter="Posts_Enter()">Posts</a>		
-				<a id="tags" class="w3-bar-item w3-button w3-hide-small w3-hover-blue-grey" href="<?= isset($InTags) ? "" : "Tags/"?>TagList.php" onmouseenter="General_Enter()">Tags</a>
-				<a id="wiki" class="w3-bar-item w3-button w3-hide-small w3-hover-blue-grey" href="<?= isset($InTags) ? "../" : ""?>wiki/">Wiki</a>
-				<a id="slideshow" class="w3-bar-item w3-button w3-hide-small w3-hover-blue-grey" href="<?= isset($InTags) ? "../" : ""?>Slideshow.php">Slideshow</a>
-				<a id="tools" class="w3-bar-item w3-button w3-hide-small w3-hover-blue-grey" onmouseenter="Tools_Enter()">Tools</a>
-				<a class="w3-bar-item w3-theme-l1"> | </a>
+                <a id="posts" class="w3-bar-item w3-button w3-hide-small w3-hover-blue-grey" href="<?= isset($InTags) ? "../" : ""?>Posts.php">Posts</a>		
+				<a id="tags" class="w3-bar-item w3-button w3-hide-small w3-hover-blue-grey" href="<?= isset($InTags) ? "" : "Tags/"?>TagList.php">Tags</a>
+				<a id="wiki" class="w3-bar-item w3-button w3-hide-small w3-hover-blue-grey" href="<?= isset($InTags) ? "../" : ""?>wiki/">Wiki</a>				
+				<a id="tools" class="w3-bar-item w3-button w3-hide-small w3-hover-blue-grey" href="<?= isset($InTags) ? "../" : ""?>Tools.php">Tools</a>
+				<a class="w3-bar-item w3-theme-l1">|</a>
 				<a class="w3-bar-item w3-button w3-hide-small w3-hover-blue-grey"><i id="state-indicator" class="fa-solid fa-circle"></i></a>
 				<a class="w3-bar-item w3-button w3-hide-small w3-hover-blue-grey"><?php echo $message . $progress; ?></a>
 
             </div>
-			<div id="subheader" class="w3-bar w3-theme-l1 w3-left-align w3-small container_subheader">
-                <a id="recent" class="w3-bar-item w3-button w3-theme-l1" href="<?= isset($InTags) ? "../" : ""?>Posts.php">Recent</a>		
+			<div id="subheader" class="w3-bar w3-theme-l1 w3-left-align w3-small container_subheader">	
                 <a id="random" class="w3-bar-item w3-button w3-theme-l1" href="<?= isset($InTags) ? "../" : ""?>Post.php?id=<?php echo $files[$r][0]; ?>">Random</a>
-                <a id="oldest" class="w3-bar-item w3-button w3-theme-l1" href="<?= isset($InTags) ? "../" : ""?>Posts.php?page=<?php echo ceil($idcount/105) ?>">Oldest</a>
-                <a id="videos" class="w3-bar-item w3-button w3-theme-l1" href="<?= isset($InTags) ? "../" : ""?>Posts.php?search=%24video">Videos</a>
                 <a id="studio-videos" class="w3-bar-item w3-button w3-theme-l1" href="<?= isset($InTags) ? "../" : ""?>Posts.php?search=%24dur>600">Studio Videos</a>
                 <a id="booru-tag" class="w3-bar-item w3-button w3-theme-l1" href="<?= isset($InTags) ? "../" : ""?>BooruTag.php">Booru Tag</a>
-                <a id="ignored-tags" class="w3-bar-item w3-button w3-theme-l1" href="<?= isset($InTags) ? "" : "Tags/"?>IgnoredTagList.php">Ignored Tag List</a>
-                <a id="dupes" class="w3-bar-item w3-button w3-theme-l1" href="<?= isset($InTags) ? "../" : ""?>Dupes.php">Dupes</a>
-				<a id="command" class="w3-bar-item w3-button w3-theme-l1" href="<?= isset($InTags) ? "../" : ""?>Command.php">Command</a>
                 <a id="separator" class="w3-bar-item w3-theme-l1">|</a>
                 <a id="edit-tags" class="w3-bar-item w3-button w3-theme-l1" onclick="showEdit()">Edit Tags</a>
 				<?php if(isset($review) && $review == 1) { echo "<a id='mark-review' class='w3-bar-item w3-button w3-theme-l1' onclick='review()'>Mark Review</a>"; } else { echo ""; } ?>

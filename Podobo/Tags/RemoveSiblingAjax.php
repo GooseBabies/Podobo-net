@@ -1,6 +1,8 @@
 <?php
-	$db = new SQLite3("C:\\Users\\Chris\\AppData\\Roaming\\Paiz\\Database\\nevada.db");
-    
+	//$db = new SQLite3("C:\\Users\\Chris\\AppData\\Roaming\\Paiz\\Database\\nevada.db");
+    //$db = new SQLite3("Y:\\Database\\nevada.db");
+    $db = new SQLite3("D:\\Piaz\\Database\\nevada.db");
+    $db->exec('PRAGMA foreign_keys = ON;');
 
     if(isset($_GET["aliasid"])) { $aliasid = $_GET["aliasid"]; } else { $aliasid = -1; };
     if(isset($_GET["preferredid"])) { $preferredid = $_GET["preferredid"]; } else { $preferredid = -1; };

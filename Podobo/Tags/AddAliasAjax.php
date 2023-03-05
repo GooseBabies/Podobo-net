@@ -1,9 +1,12 @@
 <?php
-	$db = new SQLite3("C:\\Users\\Chris\\AppData\\Roaming\\Paiz\\Database\\nevada.db");
+	//$db = new SQLite3("C:\\Users\\Chris\\AppData\\Roaming\\Paiz\\Database\\nevada.db");
+    //$db = new SQLite3("Y:\\Database\\nevada.db");
+    $db = new SQLite3("D:\\Piaz\\Database\\nevada.db");
+    $db->exec('PRAGMA foreign_keys = ON;');
     $db->busyTimeout(100);    
 	
 	if(isset($_GET["tagid"])) { $tagid = $_GET["tagid"]; } else { $tagid = -1; };
-    if(isset($_GET["alias"])) { $alias = html_entity_decode($_GET["alias"]); } else { $alias = ""; };
+    if(isset($_GET["alias"])) { $alias = Html_entity_decode($_GET["alias"]); } else { $alias = ""; };
 
     try{
         if($alias != "" and $alias != " ")
@@ -15,11 +18,11 @@
             $sql->bindValue(':tagid', $tagid, SQLITE3_INTEGER);
             $category = $sql->execute()->fetchArray()[0] ?? -1;
             
-            $sql = $db->prepare("select tagid from tags where tag_name = :alias");
+            $sql = $db->prepare("select tagid from tags where tag_name = :alias COLLATE NOCASE");
             $sql->bindValue(':alias', str_replace("_", " ", $alias) , SQLITE3_TEXT);
             $aliasid = $sql->execute()->fetchArray()[0] ?? -1;
 
-            $sql = $db->prepare("select tag_count from tags where tag_name = :alias");
+            $sql = $db->prepare("select tag_count from tags where tag_name = :alias COLLATE NOCASE");
             $sql->bindValue(':alias', str_replace("_", " ", $alias) , SQLITE3_TEXT);
             $aliascount = $sql->execute()->fetchArray()[0] ?? -1;
 

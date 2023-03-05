@@ -6,7 +6,9 @@
 	$tag_limit = 100;
 	$TagCategoryTitle=array("General", "IP/Series", "Individual", "Rating", "Artist", "Studio/Network", "Sex", "Afilliation/Group", "Race/Species/Ethnicity", "Body Part", "Clothing/Accessory", "Position", "Setting", "Action", "Meta", "Title", "Release Date");
 
-	$db = new SQLite3("C:\\Users\\Chris\\AppData\\Roaming\\Paiz\\Database\\nevada.db");	
+	//$db = new SQLite3("C:\\Users\\Chris\\AppData\\Roaming\\Paiz\\Database\\nevada.db");
+	//$db = new SQLite3("Y:\\Database\\nevada.db");	
+	$db = new SQLite3("D:\\Piaz\\Database\\nevada.db");
 	
 	if(isset($_GET["page"])) { $page = $_GET["page"]; } else { $page = 1; };
     if(isset($_GET["search"])) { $search = html_entity_decode($_GET["search"]); } else { $search = ''; };
@@ -47,7 +49,7 @@
 	$aliasid = -1;
 	$preferredid = -1;
 	$order_column = "tag_name";
-	$asc = "asc";
+	$asc = " ASC";
 
 	switch($order){
 		case 0:
@@ -84,7 +86,7 @@
 		$sql = $db->prepare("SELECT tag_name, tag_count, category, alias FROM tags order by " . $order_column . $asc . " limit :limit offset :offset");
 		$sql->bindValue(':limit', $tag_limit, SQLITE3_INTEGER);
 		$sql->bindValue(':offset', $offset, SQLITE3_INTEGER);
-		//echo "<!--" . $sql->getSQL() . "-->";
+		echo "<!--" . $sql->getSQL() . "-->";
 		$result = $sql->execute();
 		while ($row = $result->fetchArray()) {
 			array_push($page_tag_data, $row);
@@ -99,13 +101,13 @@
 	{
 		if($search == "" && $cat == -1 && $aliases == 0)
 		{
-			$sql = $db->prepare("SELECT tagid FROM tags COLLATE NOCASE order by " . $order_column . $asc . "");
+			$sql = $db->prepare("SELECT tagid FROM tags order by " . $order_column . $asc);
 			$result = $sql->execute();
 			while ($row = $result->fetchArray()) {
 				array_push($tagids, $row);
 			}
 
-			$sql = $db->prepare("SELECT tag_name, tag_count, category, alias FROM tags COLLATE NOCASE order by " . $order_column . $asc . " limit :limit offset :offset");
+			$sql = $db->prepare("SELECT tag_name, tag_count, category, alias FROM tags order by " . $order_column . $asc . " limit :limit offset :offset");
 			$sql->bindValue(':limit', $tag_limit, SQLITE3_INTEGER);
 			$sql->bindValue(':offset', $offset, SQLITE3_INTEGER);
 			echo "<!--" . $sql->getSQL() . "-->";

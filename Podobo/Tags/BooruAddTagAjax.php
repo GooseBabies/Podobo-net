@@ -1,5 +1,8 @@
 <?php
-	$db = new SQLite3("C:\\Users\\Chris\\AppData\\Roaming\\Paiz\\Database\\nevada.db");
+	//$db = new SQLite3("C:\\Users\\Chris\\AppData\\Roaming\\Paiz\\Database\\nevada.db");
+	//$db = new SQLite3("Y:\\Database\\nevada.db");
+	$db = new SQLite3("D:\\Piaz\\Database\\nevada.db");
+	$db->exec('PRAGMA foreign_keys = ON;');
 	$db->busyTimeout(100);
 	$db->enableExceptions(true);
 	
@@ -7,6 +10,7 @@
 	if(isset($_GET["parents"])) { $parents = html_entity_decode($_GET["parents"]); } else { $parents = ""; };
 	if(isset($_GET["siblings"])) { $siblings = html_entity_decode($_GET["siblings"]); } else { $siblings = ""; };
 	if(isset($_GET["bt"])) { $bt = $_GET["bt"]; } else { $bt = ""; };
+	if(isset($_GET["namespace"])) { $namespace = html_entity_decode($_GET["namespace"]); } else { $namespace = ""; };
 	if(isset($_GET["bs"])) { $bs = $_GET["bs"]; } else { $bs = ""; };
 	if(isset($_GET["cat"])) { $category = $_GET["cat"]; } else { $category = 0; };
 	$hashes = [];
@@ -24,8 +28,9 @@
 			$db->enableExceptions(true);
 			
 			//get all image hashes that are for the booru_tag and booru_source
-			$sql = $db->prepare("select hash from booru_proc where booru_tag = :bt and booru_source = :bs");
+			$sql = $db->prepare("select hash from booru_proc where booru_tag = :bt and booru_source = :bs and namespace = :namespace");
 			$sql->bindValue(':bt', $bt, SQLITE3_TEXT);
+			$sql->bindValue(':namespace', $namespace, SQLITE3_TEXT);
 			$sql->bindValue(':bs', $bs, SQLITE3_INTEGER);
 			$result = $sql->execute();
 			while ($row = $result->fetchArray()) {
@@ -36,8 +41,9 @@
 			//so if we don't find it when looking for the code of the special character check again for the special character
 
 			if(empty($hashes)){
-				$sql = $db->prepare("select hash from booru_proc where booru_tag = :bt and booru_source = :bs");
+				$sql = $db->prepare("select hash from booru_proc where booru_tag = :bt and booru_source = :bs and namespace = :namespace");
 				$sql->bindValue(':bt', html_entity_decode($bt), SQLITE3_TEXT);
+				$sql->bindValue(':namespace', $namespace, SQLITE3_TEXT);
 				$sql->bindValue(':bs', $bs, SQLITE3_INTEGER);
 				$result = $sql->execute();
 				while ($row = $result->fetchArray()) {
@@ -45,7 +51,7 @@
 				}
 			}
 			
-			$sql = $db->prepare("select tagid from tags where tag_name = :tag");
+			$sql = $db->prepare("select tagid from tags where tag_name = :tag COLLATE NOCASE");
 			$sql->bindValue(':tag', $tag, SQLITE3_TEXT);
 			$tagid = $sql->execute()->fetchArray()[0] ?? '';
 			if($tagid == '')
@@ -71,7 +77,8 @@
 			}
 			
 			//add row to tagmap
-			$sql = $db->prepare("insert into tag_map (booru_tag, booru_source, tagid) values (:bt, :bs, :tagid)");
+			$sql = $db->prepare("insert into tag_map (namespace, booru_tag, booru_source, tagid) values (:namespace, :bt, :bs, :tagid)");
+			$sql->bindValue(':namespace', $namespace, SQLITE3_TEXT);
 			$sql->bindValue(':bt', $bt, SQLITE3_TEXT);
 			$sql->bindValue(':bs', $bs, SQLITE3_INTEGER);
 			$sql->bindValue(':tagid', $tagid, SQLITE3_INTEGER);
@@ -84,7 +91,7 @@
 				{
 					if($parents_array[$i] != "" and $parents_array[$i] != " ") 
 					{
-						$sql = $db->prepare("select tagid from tags where tag_name = :parent");
+						$sql = $db->prepare("select tagid from tags where tag_name = :parent COLLATE NOCASE");
 						$sql->bindValue(':parent', str_replace("_", " ", $parents_array[$i]) , SQLITE3_TEXT);
 						$parentid = $sql->execute()->fetchArray()[0] ?? -1;
 						
@@ -113,7 +120,7 @@
 				{
 					if($siblings_array[$i] != "" and $siblings_array[$i] != " ")
 					{	
-						$sql = $db->prepare("select tagid from tags where tag_name = :alias");
+						$sql = $db->prepare("select tagid from tags where tag_name = :alias COLLATE NOCASE");
 						$sql->bindValue(':alias', str_replace("_", " ", $siblings_array[$i]) , SQLITE3_TEXT);
 						$siblingid = $sql->execute()->fetchArray()[0] ?? -1;
 
@@ -155,7 +162,8 @@
 						AddNewTag($tagid, $hashes[$i][0]);
 						CheckForParentTags($tagid, $hashes[$i][0]);
 					}
-					$sql = $db->prepare("update booru_proc set processed=1 where booru_tag = :bt and booru_source = :bs and hash = :hash");	
+					$sql = $db->prepare("update booru_proc set processed=1 where booru_tag = :bt and namespace = :namespace and booru_source = :bs and hash = :hash");
+					$sql->bindValue(':namespace', $namespace, SQLITE3_TEXT);
 					$sql->bindValue(':bt', $bt, SQLITE3_TEXT);
 					$sql->bindValue(':bs', $bs, SQLITE3_INTEGER);
 					$sql->bindValue(':hash', $hashes[$i][0], SQLITE3_TEXT);

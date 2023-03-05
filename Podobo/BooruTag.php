@@ -1,7 +1,9 @@
 <?php
 	session_start();
 
-	$db = new SQLite3("C:\\Users\\Chris\\AppData\\Roaming\\Paiz\\Database\\nevada.db");	
+	//$db = new SQLite3("C:\\Users\\Chris\\AppData\\Roaming\\Paiz\\Database\\nevada.db");	
+	//$db = new SQLite3("Y:\\Database\\nevada.db");	
+	$db = new SQLite3("D:\\Piaz\\Database\\nevada.db");
 	$db->busyTimeout(100);
 	$files = [];
 
@@ -31,12 +33,23 @@
 	
 		$r = rand(0, $idcount);
 		
-		$postp = $db->query("select * from booru_proc where processed = 0 order by random() limit 1")->fetchArray() ?? '';	
+		$postp = $db->query("select * from booru_proc where processed = 0 order by booru_source asc limit 1")->fetchArray() ?? '';	
 		$overallcount = $db->query("select count(*) from booru_proc where processed = 0")->fetchArray()[0] ?? '';
-	
-		$sql = $db->prepare("select count(*) from booru_proc where booru_tag = :bt and booru_source = :bs");
+
+		if($postp == ""){
+			$postp = array(0, "0", "0", "0", 0);
+		}
+
+		//echo "<!--" . print_r($postp) . "-->";
+
+		$sql = $db->prepare("select id from files where hash = :hash");
+		$sql->bindValue(":hash", $postp[1], SQLITE3_TEXT);
+		$id = $sql->execute()->fetchArray()[0] ?? '';
+
+		$sql = $db->prepare("select count(*) from booru_proc where booru_tag = :bt and booru_source = :bs and namespace = :namespace");
 		$sql->bindValue(":bt", $postp[2], SQLITE3_TEXT);
 		$sql->bindValue(":bs", $postp[4], SQLITE3_INTEGER);
+		$sql->bindValue(":namespace", $postp[3], SQLITE3_TEXT);
 		$tagcount = $sql->execute()->fetchArray()[0] ?? '';
 		
 		$sql = $db->prepare("select * from tags where tag_name = :tag COLLATE NOCASE");
@@ -100,7 +113,7 @@
 				echo "<p>Namespace: General (" . $tagcount . ")</p>";
 			}
 			else{
-				echo "<p>Namespace: " . $postp[3] . " (" . $tagcount . ")</p>";
+				echo "<p>Namespace: " . htmlspecialchars($postp[3]) . " (" . $tagcount . ")</p>";
 			}
 		}
 		else{
@@ -112,17 +125,27 @@
 			//echo "</form>\r\n";
 			
 			echo "<div class='w3-center'>";
-				echo "<a href='" . "https://rule34.xxx/index.php?page=post&s=list&tags=" . $postp[2] . "' target='_blank'>" . $postp[2] . " (rule34.xxx)</a>";
+				echo "<a href='https://rule34.xxx/index.php?page=post&s=list&tags=" . rawurlencode($postp[2]) . "' target='_blank'>" . htmlspecialchars($postp[2]) . " (rule34.xxx)</a>";
 			echo "</div>";
 
 			echo "<div class='w3-center'>";
 				echo "<p> - </p>";
-				echo "<a href='" . "https://e621.net/posts?tags=" . $postp[2] . "' target='_blank'>" . $postp[2] . " (e621)</a>";
+				echo "<a href='https://e621.net/posts?tags=" . rawurlencode($postp[2]) . "' target='_blank'>" . htmlspecialchars($postp[2]) . " (e621)</a>";
 			echo "</div>";
 
 			echo "<div class='w3-center'>";
 				echo "<p> - </p>";
-				echo "<a href='" . "https://danbooru.donmai.us/posts?tags=" . $postp[2] . "' target='_blank'>" . $postp[2] . " (Danbooru)</a>";
+				echo "<a href='https://danbooru.donmai.us/posts?tags=" . rawurlencode($postp[2]) . "' target='_blank'>" . htmlspecialchars($postp[2]) . " (Danbooru)</a>";
+			echo "</div>";
+
+			echo "<div class='w3-center'>";
+				echo "<p> - </p>";
+				echo "<a href='HydrusImages.php?namespace=" . rawurlencode($postp[3]) . "&tag=" . rawurlencode($postp[2]) . "' target='_blank'>" . htmlspecialchars($postp[2]) . " (Hydrus)</a>";
+			echo "</div>";
+
+			echo "<div class='w3-center'>";
+				echo "<p> - </p>";
+				echo "<a href='Post.php?id=" . $id . "' target='_blank'>[" . $id . "]</a>";
 			echo "</div>";
 		echo "</div>";
 		
@@ -290,6 +313,7 @@
 		var providedsiblings = false;
 		var bt = <?php echo json_encode($postp[2], JSON_UNESCAPED_UNICODE); ?>;
 		var bs = <?php echo $postp[4]; ?>;
+		var namespace = <?php if(is_null($postp[3])) { echo json_encode(""); } else { echo json_encode($postp[3], JSON_UNESCAPED_UNICODE); };  ?>;
 		var submit;
 		var ignore;
 		var resdiv;
@@ -386,7 +410,7 @@
 		function GetParent(data)
 		{
 			$.ajax({
-				url: 'Tags/ParentAjax.php?txt=' + data,
+				url: 'Tags/ParentAjax.php?txt=' + encodeURIComponent(data),
 				type: 'get',
 				dataType: 'JSON',
 				success: function(response){
@@ -411,7 +435,7 @@
 		function GetSibling(data)
 		{
 			$.ajax({
-				url: 'Tags/AliasAjax.php?txt=' + data,
+				url: 'Tags/AliasAjax.php?txt=' + encodeURIComponent(data),
 				type: 'get',
 				dataType: 'JSON',
 				success: function(response){
@@ -531,7 +555,7 @@
 			cat = category.value;
 			
 			$.ajax({
-				url: 'Tags/BooruAddTagAjax.php?tag=' + encodeURIComponent(tag) + parents + siblings + '&bt=' + encodeURIComponent(bt) + '&bs=' + bs + '&cat=' + cat,
+				url: 'Tags/BooruAddTagAjax.php?tag=' + encodeURIComponent(tag) + parents + siblings + '&bt=' + encodeURIComponent(bt) + '&bs=' + bs + '&cat=' + cat + '&namespace=' + namespace,
 				type: 'get',
 				dataType: 'JSON',
 				success: function(response){

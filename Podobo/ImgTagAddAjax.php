@@ -1,5 +1,8 @@
 <?php
-	$db = new SQLite3("C:\\Users\\Chris\\AppData\\Roaming\\Paiz\\Database\\nevada.db");
+	//$db = new SQLite3("C:\\Users\\Chris\\AppData\\Roaming\\Paiz\\Database\\nevada.db");
+	//$db = new SQLite3("Y:\\Database\\nevada.db");
+	$db = new SQLite3("D:\\Piaz\\Database\\nevada.db");
+	$db->exec('PRAGMA foreign_keys = ON;');
 	$db->busyTimeout(100);
 	
 	if(isset($_GET["tag"])) { $tag = html_entity_decode($_GET["tag"]); } else { $tag = ""; };
@@ -27,7 +30,7 @@
 				$sql->bindValue(':id', $id , SQLITE3_INTEGER);
 				$hash = $sql->execute()->fetchArray()[0] ?? '';
 
-				$sql = $db->prepare("select tagid from tags where tag_name = :tag");
+				$sql = $db->prepare("select tagid from tags where tag_name = :tag COLLATE NOCASE");
 				$sql->bindValue(':tag', $tag, SQLITE3_TEXT);
 				$tagid = $sql->execute()->fetchArray()[0] ?? -1;
 
@@ -57,7 +60,7 @@
 				}
 			}
 			$db->exec('COMMIT;');
-			echo json_encode("");
+			echo json_encode($tag);
 		}
 	}catch(exception $e){
 		$output = $db->lastErrorMsg();

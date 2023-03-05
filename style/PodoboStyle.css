@@ -3,22 +3,38 @@
   [class*="col-"] {
     width: 100%;    
     }
+
     .row{
       display:flex;
       flex-direction:Column-reverse;
     }
+
     .search-tag-list{    
         display: block;
     }
+
     .main-left{
         height: auto;
         overflow:visible;
         position:relative;
         z-index: 2;
     }
+
+    .main-left-edit{
+      height: auto;
+      overflow-y:scroll;
+      position:absolute;
+      top: 48px;
+      bottom: 0;
+      z-index: 1;
+      opacity: 0.65;
+      background-color: #002D55;
+  }
+
     .center-fit{
      width:98vw;
     }
+
     .tagarea {
       display: block;
       height: auto;
@@ -30,9 +46,17 @@
       height: auto;
     }
 
-    .posts {
-      width: 32%;
-      padding: 1px;
+    .post-preview {
+      /* width: 32%;
+      padding: 1px; */
+      display: flex;
+      place-items: center normal;
+    }
+
+    .post-article{
+      display: inline-block;
+      padding: 0.5rem;
+      vertical-align: top;
     }
 
     .nametext{
@@ -40,7 +64,11 @@
     }
 
     .posts-wrapper{
-      padding-left: 10px;
+      /* padding-left: 10px; */
+      display: grid;
+      gap: 0.5rem;
+      white-space: nowrap;
+      grid-template-columns: repeat(auto-fill, minmax(175px, 1fr)); 
     }
 
     .index-search{
@@ -87,9 +115,15 @@
       height: 7.88vh; /* 7.03vh; */
     }
 
-    .posts {
-      width: 7.6%;
-      padding: 5px;
+    .post-preview {
+      display: flex;
+      place-items: flex-end;
+    }
+
+    .post-article{
+      display: inline-block;
+      padding: 0.5rem;
+      vertical-align: top;
     }
 
     .nametext{
@@ -97,9 +131,13 @@
     }
 
     .posts-wrapper{
-      padding-left: 40px;
+      /* padding-left: 40px;
       padding-top: 25px;
-      height: 93%;
+      height: 93%; */
+      display: grid;
+      gap: 0.5rem;
+      white-space: nowrap;
+      grid-template-columns: repeat(auto-fill, minmax(175px, 1fr)); 
     }
 
     .index-search{
@@ -125,7 +163,7 @@ html,body
     overflow-x:hidden;
 }
 
-a, p, strong, label
+a, p, strong, label, h1, h2, h3, h4, h5, h6, li
 {
     color:#FFFFFF;
     text-decoration:none;
@@ -144,13 +182,6 @@ hr{
 
 img{
     padding: 0px;
-}
-
-a:Hover
-{
-  color:#FFFFFF;
-  text-decoration:none;
-	font-weight: bold;
 }
 
 input, select{
@@ -176,9 +207,11 @@ input[type=button] {
   font-size: 16px;
 }
 
-.posts {
+ .hydrus-posts {
   float: left;
   display: flex;
+  flex-wrap: wrap;
+  padding: 5px;
  }
 
  .thumbs{
@@ -186,6 +219,14 @@ input[type=button] {
   height:165px;
   object-fit:cover; /* Do not scale the image */
   object-position:center; /* Center the image within the element */ 
+}
+
+.hydrus-thumbs{
+  width:165px;
+  height:165px;
+  object-fit:contain; /* Do not scale the image */
+  object-position:center; /* Center the image within the element */ 
+  margin: 5px;
 }
 
 .tagged {
@@ -315,10 +356,6 @@ input[type=button] {
   /* padding-top: 10px; */
 }
 
-.posts-wrapper{
-  width: 100%;   
-}
-
 .rating-wrapper{
 	display:flex;
     flex-wrap:wrap;
@@ -424,4 +461,38 @@ input[type=button] {
 
 #state-indicator {
   vertical-align: middle;
+}
+
+#wiki-body-input{
+  white-space: pre-wrap;
+  margin-left: 10px;
+  margin-right: 10px;
+}
+
+#wiki-id-input{
+  width: 30px;
+}
+
+#wiki-key-input{
+  width:100px;
+}
+
+.wiki-div{
+  margin-left: 10px;
+}
+
+.wiki-link{
+  color: #009be6;
+}
+
+.wiki-link-broken{
+  color: #ff898b;
+}
+
+.ext-link{
+  color: #c797ff;
+}
+
+.podobo-link{
+  color: #35c64a;
 }
