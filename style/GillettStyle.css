@@ -1,0 +1,114 @@
+/* For mobile phones: */
+@media only screen and (max-width: 600px) {
+    [class*="col-"] {
+      width: 100%;    
+      }
+      .row{
+        display:flex;
+        flex-direction:Column-reverse;
+      }
+      .search-tag-list{    
+          display: block;
+      }
+      .main-left{
+          height: auto;
+          overflow:visible;
+          position:relative;
+          z-index: 2;
+      }      
+  }
+  
+  @media only screen and (min-width: 600px) {
+    /* For desktop: */
+    .row {
+      display:flex;
+      flex-direction:row;
+      }
+    .col-1 {width: 10%;}
+    .col-2 {width: 20%;}
+    .col-3 {width: 30%;}
+    .col-4 {width: 40%;}
+    .col-5 {width: 50%;}
+    .col-6 {width: 60%;}
+    .col-7 {width: 70%;}
+    .col-8 {width: 80%;}
+    .col-9 {width: 90%;}
+    .col-10 {width: 98%;}  
+      .main-left{
+          height: 96.25vh;
+          /* height: 100%; */
+          position:relative;
+          z-index: 2;
+      }
+  }
+  
+  [class*="col-"] {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  html,body
+  {
+      background-color:#002D55;
+      margin:0;     /* This is used to reset any browser-default margins */
+      height:100vh; /* This is needed to overcome a Chrome bug. */
+      width:100vw;
+      font-family:Verdana,sans-serif;
+      font-size:12px;
+      line-height:1.5;
+      overflow-x:hidden;
+  }
+  
+  a, p, strong, label, h1, h2, h3, h4, h5, h6
+  {
+      color: white;
+      text-decoration:none;
+      margin-top: 0em;
+      margin-bottom: 0em;
+  }
+
+  table, td, th
+  {
+      color: white;
+      text-decoration:none;
+      margin-top: 0em;
+      margin-bottom: 0em;
+      border: 2px solid white;
+      border-collapse: collapse;
+  }
+
+  th{
+    font-size:20px;
+    height: 6.5vh;
+  }
+
+  td{
+    height: 13vh;
+    vertical-align: top;
+  }
+
+  table{
+    margin: 10px;
+    vertical-align:center;
+    table-layout: fixed;
+    width: 99%;
+  }
+
+  .month-num{
+    float: right;
+    font-weight:bold;
+    margin: 3px;
+  }
+
+  .current-day{
+    background-color:#005299;
+  }
+
+  .day-tasks{
+    margin-top: 20px;
+  }
+  
+  a
+  {
+      font-weight: bold;
+  }
