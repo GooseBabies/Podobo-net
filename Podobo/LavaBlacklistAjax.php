@@ -21,14 +21,14 @@
     }
 
     //select next dupe to process
-    $sql = $db->prepare("select * from blacklist where processed = 0 and rej_count > 0 limit 1");
+    $sql = $db->prepare("select * from blacklist where processed = 0 and rej_count > 1 limit 1");
 	$mediaid = $sql->execute()->fetchArray();
 
     if($mediaid){
         echo $mediaid[0];
     }
     else{
-        $sql = $db->prepare("update processed set blacklist=1");
+        $sql = $db->prepare("update processed set state = 9");
         $sql->execute();
         echo -1;
     }

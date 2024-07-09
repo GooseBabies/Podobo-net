@@ -179,14 +179,12 @@
 					dataType: 'JSON',
 					success: function(response){
 						//console.log(response);
-                        if(response[0] == 1){
-                            location.href = 'LavaDupes.php?id=' + response[1];	
-                        }
-                        else if(response[0] == 2){
+                        if(response == -1){
                             location.href = 'LavaDupesEnd.php';
+                            
                         }
-                        else if(response[0] == 3){
-                            location.href = 'LavaCheckWhitelist.php?id=' + response[1];
+                        else{
+                            location.href = 'LavaDupes.php?id=' + response;
                         }
                         
 					},

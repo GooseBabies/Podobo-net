@@ -31,7 +31,7 @@
 	$media = $sql->execute()->fetchArray();
 
     if(!$media){
-        $sql = $db->prepare("select * from blacklist where processed = 0 and rej_count > 0 limit 1");
+        $sql = $db->prepare("select * from blacklist where processed = 0 and rej_count > 1 limit 1");
 	    $blacklist = $sql->execute()->fetchArray();
         die("<script>location.href = 'LavaBlacklist.php?id=" . $blacklist[0] . "'</script>");
     }
@@ -107,15 +107,13 @@
 					dataType: 'JSON',
 					success: function(response){
 						//console.log(response);
-						if(response[0] == 1){
-							location.href = 'LavaDecide.php?id=' + response[1];
-						}
-						else if(response[0] == 2){
+						if(response == -1){
 							location.href = 'LavaDecideEnd.php';
+							
 						}
-						else if(response[0] == 3){
-                            location.href = 'LavaCheckWhitelist.php?id=' + response[1];
-                        }
+						else{
+							location.href = 'LavaDecide.php?id=' + response;
+						}
                         
 					},
 					error: function(xhr, ajaxOptions, thrownError)

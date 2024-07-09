@@ -59,14 +59,14 @@
 <li><a id="ignored-tags" class="w3-bar-item w3-button w3-theme-l1" href="<?= isset($InTags) ? "" : "Tags/"?>IgnoredTagList.php">Ignored Tag List</a></li>
 <?php
 	if($dupecount > 0){
-		echo "<li><a id='dupes' class='w3-bar-item w3-button w3-theme-l1' href='" . (isset($InTags) ? "../" : "") . "Dupes.php?id=" . $dupeid[0] . "'>Dupes</a></li>";
+		echo "<li><a id='dupes' class='w3-bar-item w3-button w3-theme-l1' href='" . (isset($InTags) ? "../" : "") . "Dupes.php?id=" . $dupeid[0] . "'>Dupes [" . $dupecount . "]</a></li>";
 	}	
 ?>
 <li><a id="command" class="w3-bar-item w3-button w3-theme-l1" href="<?= isset($InTags) ? "../" : ""?>Command.php">Command</a></li>
 <li><a id="slideshow" class="w3-bar-item w3-button w3-theme-l1" href="<?= isset($InTags) ? "../" : ""?>Slideshow.php">Slideshow</a></li>
 <li><a id="hydrus" class="w3-bar-item w3-button w3-theme-l1" href="https://podobo.ddns.net:45869/">Hydrus</a></li>
 <li><a id="stats" class="w3-bar-item w3-button w3-theme-l1" href="<?= isset($InTags) ? "../" : ""?>Stats.php">Stats</a></li>
-<li><a id="rarity" class="w3-bar-item w3-button w3-theme-l1" href="<?= isset($InTags) ? "../" : ""?>Rarity.php">Rarity</a></li>
+<li><a id="rarity" class="w3-bar-item w3-button w3-theme-l1" href="<?= isset($InTags) ? "../" : ""?>Sets.php">Sets</a></li>
 <li><a id="elo" class="w3-bar-item w3-button w3-theme-l1" href="<?= isset($InTags) ? "../" : ""?>Elo.php">Elo</a></li>
 <li><a id="lavapool" class="w3-bar-item w3-button w3-theme-l1" href="<?= isset($InTags) ? "../" : ""?>LavaIntro.php">Lava Pool</a></li>
 

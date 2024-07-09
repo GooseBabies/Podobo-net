@@ -221,7 +221,7 @@
 			echo "<div>";
 				echo "<textarea id='sibling' rows='6' cols='40' oninput='AddedSiblings()'></textarea>";					
 			echo "</div>";
-			echo "<div><input class='w3-center' id='siblingcapitalizebutton' type='button' value='Capitalize' onclick='CapitalizeSiblings()'/><input class='w3-center' id='newlinebutton' type='button' Value='New Line' onclick='AddNewLine()' /></div>";
+			echo "<div><input class='w3-center' id='siblingcapitalizebutton' type='button' value='Capitalize' onclick='CapitalizeSiblings()'/><input class='w3-center' id='bracketizebutton' type='button' value='Bracketize' onclick='Bracketize()'/><input class='w3-center' id='newlinebutton' type='button' Value='New Line' onclick='AddNewLine()' /></div>";
 		echo "</div>";
 		
 		echo "<hr />";
@@ -432,6 +432,15 @@
 			input.value = input.value.split('.').map(word => word.charAt(0).toUpperCase() + word.substring(1)).join('.');
 			//input.value = input.value.split('\'').map(word => word.charAt(0).toUpperCase() + word.substring(1)).join('\'');
 			input.value = input.value.split('\n').map(word => word.charAt(0).toUpperCase() + word.substring(1)).join('\n');
+		}
+
+		function Bracketize(){
+			var close_parens = input.value.lastIndexOf(")");
+			var open_parens = input.value.lastIndexOf("(");
+
+			input.value = input.value.replaceAt(close_parens, "]");
+			input.value = input.value.replaceAt(open_parens, "[");
+
 		}
 
 		function AddNewLine(){
@@ -650,6 +659,10 @@
 			sibling.value = "";
 			category.value = 0;
 			siblungcount = 0;
+		}
+
+		String.prototype.replaceAt = function(index, replacement) {
+			return this.substring(0, index) + replacement + this.substring(index + replacement.length);
 		}
 		
 	</script>

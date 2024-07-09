@@ -9,7 +9,7 @@
 
     if($kept == 1){
         //permanatly keep whitelist
-        $sql = $db->prepare("update blacklist set rej_count = rej_count + 999 where id=:id");
+        $sql = $db->prepare("update blacklist set permawhitelisted = 1 where id=:id");
         $sql->bindValue(":id", $id, SQLITE3_INTEGER);
         $sql->execute();
     }
@@ -35,27 +35,17 @@
     }
 
     //check if were still on dupes
-    $sql = $db->prepare("select id from dupes where processed = 0 limit 1");
-	$dupeid = $sql->execute()->fetchArray();
-
-    $sql = $db->prepare("select id from media where processed = 0 limit 1");
-	$mediaid = $sql->execute()->fetchArray();
+    $sql = $db->prepare("select id from blacklist where rej_count > 30 and whitelisted = 1 and permawhitelisted = 0 limit 1");
+	$whitelistid = $sql->execute()->fetchArray();
 
     //cases middle of dupes, end of dupes, middle of decide, end of decide
 
-    if($dupeid){
+    if($whitelistid){
         //middle of dupes
-        echo json_encode(array(1, $dupeid[0]));
+        echo json_encode($whitelistid[0]);
     }
     else{
-        //end of dupes
-        if($mediaid){
-            //end of dupes or middle of decide, have to skip dupe end page based on how system is set up
-            echo json_encode(array(2, $mediaid[0]));
-        }
-        else{
-            echo json_encode(array(3, $mediaid[0]));
-        }
+        echo json_encode(-1);
     }
     
 	$db = null;

@@ -105,15 +105,12 @@
 					dataType: 'JSON',
 					success: function(response){
 						//console.log(response);
-						if(response[0] == 1){
-							location.href = 'LavaDupes.php?id=' + response[1];
+						if(response == -1){
+							location.href = 'LavaCheckWhitelistEnd.php';
 						}
-						else if(response[0] == 2){
-							location.href = 'LavaDecide.php?id=' + response[1];
+						else{
+							location.href = 'LavaCheckWhitelist.php?id=' + response;
 						}
-                        else if(response[0] == 3){
-                            location.href = 'LavaDecideEnd.php';
-                        }
 					},
 					error: function(xhr, ajaxOptions, thrownError)
 					{

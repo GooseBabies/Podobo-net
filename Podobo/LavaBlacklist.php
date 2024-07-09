@@ -45,17 +45,17 @@
 
 	<?php
 
-    echo "<p class='w3-center' id='desc'>" . $blacklist[1] . " [" . $blacklist[2] . " | " . $blacklist[3] . "] - " . $blacklist[4] . "</p>";
+    echo "<p class='w3-center' id='desc'>" . $blacklist[0] . " - " . $blacklist[1] . " [" . $blacklist[2] . " | " . $blacklist[3] . "] - " . $blacklist[4] . "</p>";
 
     echo "<hr />";
 
     echo "<div>";
 
-    echo "<div class='w3-center'><a href='https://danbooru.donmai.us/posts?tags=" . urlencode($blacklist[1]) . "'>Danbooru</a><p> - </p></div>";
+    echo "<div class='w3-center'><a href='https://danbooru.donmai.us/posts?tags=" . urlencode($blacklist[1]) . "'>Danbooru [" . $blacklist[5] . "]</a><p> - </p></div>";
 
     echo "<div class='w3-center'><a href='https://e621.net/posts?tags=" . urlencode($blacklist[1]) . "'>e621</a><p> - </p></div>";
 
-    echo "<div class='w3-center'><a href='https://rule34.xxx/index.php?page=post&s=list&tags=" . urlencode($blacklist[1]) . "'>rule34</a><p> - </p></div>";
+    echo "<div class='w3-center'><a href='https://rule34.xxx/index.php?page=post&s=list&tags=" . urlencode($blacklist[1]) . "'>rule34 [" . $blacklist[6] . "]</a><p> - </p></div>";
 
     echo "<div class='w3-center'><a href='https://podobo.ddns.net/Podobo/Posts.php?search=%24start%3A" . urlencode($blacklist[1]) . "'>Podobo</a><p> - </p></div>";
 

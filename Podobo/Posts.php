@@ -1009,7 +1009,7 @@ include_once('header.php');
 			<main class="row">
 			<div class="w3-theme main-left">
                         <div>
-			<h4 class="w3-bar-item"><b>Tags</b></h4>
+			<!-- <h5><b>Search</b></h5> -->
 			
 			<?php
 			$sql2 = "select tag_name, category, tag_count from tags order by tag_count desc limit 40";
@@ -1019,10 +1019,13 @@ include_once('header.php');
 			}
 			
 			$db = null;
+			echo "<div style='white-space:nowrap'>";
+			echo "<label>Search</label>";
 			echo "<form class='tagadd' action='Posts.php' method='GET'>";
 				echo "<input type='text' id='tag-input' oninput='TagSuggestions(this.value)' name='search' value='" . htmlspecialchars($search, ENT_QUOTES) . "'  data-multiple/>";
 				echo "<input type='submit' hidden />";
 			echo"</form>";
+			echo "</div>";
 			
 			echo "<hr />";
 			echo "</div>";

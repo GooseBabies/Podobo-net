@@ -734,7 +734,11 @@ input[type=button] {
   height: 100%;
 }
 
-.dupe-buttons input {
+.dupe-buttons {
   display: flex;
-  width: 130px;
+  /* width: 130px; */
+  flex-flow: row;
+  align-items: center; 
+  justify-content: center;
+  column-gap: 20px;
 }

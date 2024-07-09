@@ -24,7 +24,7 @@
         $result = $sql->execute();
     }
     //select next dupe to process
-    $sql = $db->prepare("select * from blacklist where processed = 0 and rej_count > 0 limit 1");
+    $sql = $db->prepare("select * from blacklist where processed = 0 and rej_count > 1 limit 1");
 	$mediaid = $sql->execute()->fetchArray();
 
     if($mediaid){
