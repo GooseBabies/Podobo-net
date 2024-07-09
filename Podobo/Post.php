@@ -222,6 +222,13 @@
                 document.getElementById("edit-tags").style.display = "block";
                 document.getElementById("search-indicator").style.display = "block";
 				document.getElementById("tagarea").style.display = "block";
+
+				var i, tabcontent;
+				tabcontent = document.getElementsByClassName("tabcontent");
+				for (i = 0; i < tabcontent.length; i++) {
+					tabcontent[i].style.display = "none";
+				}
+				document.getElementById("tagarea").style.display = "block";
 			});
 
 		</script>
