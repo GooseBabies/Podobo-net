@@ -31,7 +31,7 @@
 	
 	//tag Map
 
-    $sql = $db->prepare("select id, name, series from sets");
+    $sql = $db->prepare("select id, name, series, set_list from sets");
 	$result = $sql->execute();
 	while ($row = $result->fetchArray()) {
         array_push($sets, $row);
@@ -64,8 +64,9 @@
                 echo "<p><strong>Sets</strong><p>-</p>";
 
                 foreach($sets as $set){
+					$setlist = explode(",", $set[3]);
                     echo "<div id=" . $set[0] . ">";
-                    echo "<p><a href='Posts.php?search=%24set%3A" . $set[0] . "'> " . $set[1] . "</a>";
+                    echo "<p><a href='Posts.php?search=%24set%3A" . $set[0] . "'> " . $set[1] . "(" . count($setlist) . ")</a>";
                     echo "</p></div>";
                 }
 				
